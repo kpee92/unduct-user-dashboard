@@ -1,6 +1,7 @@
 "use client";
 
 import SumsubVerification from "@/components/SumsubVerification";
+import TwoFactorAuth from "@/components/TwoFactorAuth";
 
 export default function SettingsPage() {
   return (
@@ -8,6 +9,8 @@ export default function SettingsPage() {
       <h1 className="rl-page-title">Settings</h1>
 
       <div className="settings-container">
+        <TwoFactorAuth />
+        
         <section className="verification-card">
           <div className="verification-header">
             <div className="icon-badge">

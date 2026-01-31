@@ -135,22 +135,32 @@ export default function WalletsPage() {
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-header">
-              <h3>Connect Wallet</h3>
+              <div className="modal-title-wrapper">
+                <div className="modal-icon">
+                  <FaWallet />
+                </div>
+                <h3>Connect Wallet</h3>
+              </div>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><FaTimes /></button>
             </div>
             <form onSubmit={handleCreate}>
               <div className="form-group">
                 <label>Network</label>
-                <select 
-                  value={network} 
-                  onChange={(e) => setNetwork(e.target.value)}
-                  className="rl-input"
-                >
-                  <option value="BTC">Bitcoin (BTC)</option>
-                  <option value="ETH">Ethereum (ETH)</option>
-                  <option value="SOL">Solana (SOL)</option>
-                  <option value="USDT">Tether (USDT)</option>
-                </select>
+                <div className="select-wrapper">
+                  <select 
+                    value={network} 
+                    onChange={(e) => setNetwork(e.target.value)}
+                    className="rl-input select-input"
+                  >
+                    <option value="BTC">Bitcoin (BTC)</option>
+                    <option value="ETH">Ethereum (ETH)</option>
+                    <option value="SOL">Solana (SOL)</option>
+                    <option value="USDT">Tether (USDT)</option>
+                  </select>
+                  <div className="select-arrow">
+                    <FaArrowDown size={10} />
+                  </div>
+                </div>
               </div>
               
               <div className="form-group">
@@ -183,71 +193,180 @@ export default function WalletsPage() {
           left: 0;
           right: 0;
           bottom: 0;
-          background: rgba(0,0,0,0.7);
-          backdrop-filter: blur(5px);
+          background: rgba(0,0,0,0.8);
+          backdrop-filter: blur(8px);
           display: flex;
           align-items: center;
           justify-content: center;
           z-index: 1000;
           padding: 20px;
+          animation: fadeIn 0.2s ease-out;
         }
         .modal-content {
-          background: var(--bg-secondary);
-          border: 1px solid var(--card-border);
-          border-radius: 20px;
+          background: var(--card-bg);
+          border: 1px solid var(--border);
+          border-radius: 24px;
           width: 100%;
-          max-width: 450px;
-          padding: 24px;
-          box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+          max-width: 480px;
+          padding: 32px;
+          box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+          animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          overflow: hidden;
         }
+        /* Glass gradient effect */
+        .modal-content::before {
+          content: "";
+          position: absolute;
+          top: 0; left: 0; right: 0; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         .modal-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 24px;
+          margin-bottom: 28px;
         }
-        .modal-header h3 { margin: 0; font-size: 20px; }
+        .modal-title-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .modal-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 12px;
+          background: rgba(var(--primary-rgb, 255, 152, 0), 0.1);
+          color: var(--primary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+        }
+        .modal-header h3 { 
+          margin: 0; 
+          font-size: 22px; 
+          font-weight: 700;
+          letter-spacing: -0.5px;
+        }
         .close-btn {
-          background: none;
+          background: var(--bg-soft);
           border: none;
           color: var(--muted);
           cursor: pointer;
-          font-size: 18px;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s;
         }
-        .form-group { margin-bottom: 20px; }
+        .close-btn:hover {
+          background: rgba(255,255,255,0.1);
+          color: var(--text);
+        }
+
+        .form-group { margin-bottom: 24px; }
         .form-group label {
           display: block;
-          margin-bottom: 8px;
+          margin-bottom: 10px;
           font-size: 13px;
           font-weight: 600;
           color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
+        
         .rl-input {
           width: 100%;
-          padding: 12px 16px;
-          background: var(--bg-tertiary);
-          border: 1px solid var(--border);
-          border-radius: 10px;
+          padding: 14px 16px;
+          background: var(--bg-soft);
+          border: 1px solid transparent;
+          border-radius: 12px;
           color: var(--text);
-          font-size: 15px;
+          font-size: 16px;
           outline: none;
+          transition: all 0.2s ease;
         }
         .rl-input:focus {
           border-color: var(--primary);
+          background: var(--card-bg);
+          box-shadow: 0 0 0 4px rgba(var(--primary-rgb, 255, 152, 0), 0.1);
         }
-        .modal-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-          margin-top: 30px;
+        .rl-input::placeholder {
+          color: var(--muted);
+          opacity: 0.5;
         }
-        .rl-btn-ghost {
-          background: transparent;
+
+        /* Custom Select */
+        .select-wrapper {
+          position: relative;
+        }
+        .select-input {
+          appearance: none;
+          cursor: pointer;
+        }
+        .select-arrow {
+          position: absolute;
+          right: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          pointer-events: none;
           color: var(--muted);
         }
-        .rl-btn-ghost:hover {
+
+        .modal-actions {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 16px;
+          margin-top: 32px;
+        }
+        
+        .rl-btn {
+          height: 48px;
+          font-size: 15px;
+          font-weight: 600;
+          border-radius: 12px;
+          letter-spacing: 0.3px;
+          transition: all 0.2s;
+        }
+        
+        .rl-btn-ghost {
+          background: var(--bg-soft);
           color: var(--text);
-          background: rgba(255,255,255,0.05);
+        }
+        .rl-btn-ghost:hover {
+          background: rgba(255,255,255,0.1);
+        }
+        
+        .rl-btn-primary {
+          background: var(--primary);
+          color: #000; /* Assuming primary is bright, usually black text looks best */
+          box-shadow: 0 4px 12px rgba(var(--primary-rgb, 255, 152, 0), 0.3);
+          border: none;
+        }
+        .rl-btn-primary:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 6px 16px rgba(var(--primary-rgb, 255, 152, 0), 0.4);
+        }
+        .rl-btn-primary:active {
+          transform: translateY(0);
+        }
+        .rl-btn-primary:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
         }
 
         /* Existing Card Styles */
@@ -285,7 +404,7 @@ export default function WalletsPage() {
         .wallet-name { font-size: 18px; font-weight: 700; color: var(--text); }
         .wallet-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
         .wallet-balance {
-          background: var(--bg-tertiary);
+          background: var(--bg-soft);
           border-radius: 12px;
           padding: 16px;
           margin-bottom: 20px;

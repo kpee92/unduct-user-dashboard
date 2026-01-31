@@ -76,6 +76,10 @@ export const endpoints = {
   getVerificationStatus: () => "/user/verification-status",
   kycStatus: () => "/api/kyc/kycStatus",
   startKyc: () => "/api/kyc/startKyc",
+
+  // 2FA
+  enable2FA: () => "/users/twofa/enable",
+  verify2FA: () => "/users/twofa/verify",
 };
 
 // Safely decode a JWT payload without verifying signature (client-side display only)
