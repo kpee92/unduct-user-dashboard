@@ -27,6 +27,11 @@ export const toastMiddleware = (store) => (next) => (action) => {
     
     // Success Toast Logic
     if (isSuccessToastable(action.type)) {
+        // Skip success toast if 2FA is required (handled by component or considered a partial step)
+        if (action.payload?.requiresTwoFa) {
+            return next(action);
+        }
+
         // Derive title from action type, e.g. "auth/login/fulfilled" -> "Login"
         const parts = action.type.split("/");
         // parts[1] is usually the action name (login, register, etc)

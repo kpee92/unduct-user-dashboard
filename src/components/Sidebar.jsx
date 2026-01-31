@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
-import { logout } from "@/store/slices/authSlice";
+import { logoutThunk } from "@/store/slices/authSlice";
 import { FaTachometerAlt, FaWallet, FaClipboardList, FaCog, FaSignOutAlt } from "react-icons/fa";
 
 const NAV_TOP = [
@@ -22,7 +22,7 @@ export default function Sidebar({ drawerOpen = false, onClose }) {
   const dispatch = useDispatch();
 
   function handleLogout() {
-    dispatch(logout());
+    dispatch(logoutThunk());
     router.push("/signin");
   }
 

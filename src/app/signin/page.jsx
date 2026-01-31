@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginThunk } from "@/store/slices/authSlice";
+import { addToast } from "@/store/slices/uiSlice";
 
 function SignInContent() {
   const router = useRouter();
@@ -30,10 +31,16 @@ function SignInContent() {
     const payload = {
       email: form.get("email"),
       password: form.get("password"),
-      twoFactorCode: form.get("twoFactorCode") || "",
+      twoFaCode: form.get("twoFactorCode") || "",
     };
     const res = await dispatch(loginThunk(payload));
     if (res.meta.requestStatus === "fulfilled") {
+      // Check if 2FA is required
+      if (res.payload?.requiresTwoFa) {
+        dispatch(addToast({ type: "error", message: "Please enter your 2FA code" }));
+        return; 
+      }
+      
       const next = searchParams.get("next");
       router.push(next || "/dashboard");
     }
