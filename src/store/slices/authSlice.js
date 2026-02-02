@@ -80,7 +80,7 @@ export const checkKycStatusThunk = createAsyncThunk("auth/checkKycStatus", async
 
 export const twoFAStatusThunk = createAsyncThunk("auth/twoFAStatus", async (userId, { rejectWithValue }) => {
   try {
-    return await apiRequest(endpoints.getTwoFaStatus(userId), { method: "POST" });
+    return await apiRequest(endpoints.getTwoFaStatus(userId), { method: "GET" });
   } catch (e) {
     return rejectWithValue(e.message);
   }

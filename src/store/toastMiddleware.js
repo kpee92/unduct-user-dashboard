@@ -3,7 +3,8 @@ import { addToast, setGlobalLoading } from "./slices/uiSlice";
 const ignoredActions = [
   "auth/checkKycStatus",
   "ticker/fetchPrices",
-  "payment/history"
+  "payment/history",
+  "auth/twoFAStatus"
 ];
 
 const isIgnored = (type) => ignoredActions.some((prefix) => type.startsWith(prefix));
