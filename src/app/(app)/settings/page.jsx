@@ -9,8 +9,6 @@ export default function SettingsPage() {
       <h1 className="rl-page-title">Settings</h1>
 
       <div className="settings-container">
-        <TwoFactorAuth />
-        
         <section className="verification-card">
           <div className="verification-header">
             <div className="icon-badge">
@@ -29,6 +27,8 @@ export default function SettingsPage() {
             <SumsubVerification />
           </div>
         </section>
+
+        <TwoFactorAuth />
       </div>
 
       <style jsx>{`
@@ -42,6 +42,7 @@ export default function SettingsPage() {
           border-radius: 16px;
           overflow: hidden;
           box-shadow: var(--shadow-1);
+          margin-bottom: 24px;
         }
         .verification-header {
           padding: 32px;
