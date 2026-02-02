@@ -80,6 +80,8 @@ export const endpoints = {
   // 2FA
   enable2FA: () => "/users/twofa/enable",
   verify2FA: () => "/users/twofa/verify",
+  getTwoFaStatus: (userId) => `/users/getTwoFaStatus/${userId}`,
+  disable2FA: () => "/users/disableTwoFaSimple",
 };
 
 // Safely decode a JWT payload without verifying signature (client-side display only)

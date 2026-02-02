@@ -1,20 +1,54 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { apiRequest, endpoints, getTokenPayload } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/uiSlice";
+import { twoFAStatusThunk, disable2faThunk } from "@/store/slices/authSlice";
 
-export default function TwoFactorAuth() {
+export default function TwoFactorAuth({ isEnabledProp }) {
   const dispatch = useDispatch();
   const [status, setStatus] = useState("disabled"); // disabled, setup, enabled
   const [qrCode, setQrCode] = useState(null);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Sync with prop if provided
+  useEffect(() => {
+    if (isEnabledProp) {
+        setStatus("enabled");
+    }
+  }, [isEnabledProp]);
+
+  // Keep internal check as backup or parallel (optional, but requested to move to page)
+  // We can leave the internal check to handle direct refreshes if the prop isn't ready immediately
+  // But if parent provides it, we prioritize successful enable.
+  
   const getUserId = () => {
       const payload = getTokenPayload();
       return payload?.id || payload?.sub; 
   };
+
+  useEffect(() => {
+    const userId = getUserId();
+    console.log("2FA: Checking status for User ID:", userId);
+    
+    if (userId) {
+      dispatch(twoFAStatusThunk(userId))
+        .unwrap()
+        .then((res) => {
+           console.log("2FA: Status Response:", res);
+           // Check for various response formats
+           const isEnabled = res?.status === 'enabled' || res?.is2FaEnabled === true;
+           if (isEnabled) {
+               setStatus("enabled");
+           } else if (!isEnabledProp) {
+               // Only reset to disabled if prop is also false
+               // setStatus("disabled"); 
+           }
+        })
+        .catch((err) => console.error("2FA Status Check Failed:", err));
+    }
+  }, [dispatch, isEnabledProp]);
 
   const handleGetQR = async () => {
     setLoading(true);
@@ -69,6 +103,26 @@ export default function TwoFactorAuth() {
     }
   };
 
+  const handleDisable = async () => {
+      if (!code || code.length !== 6) {
+          dispatch(addToast({ type: "error", message: "Please enter a valid 6-digit code" }));
+          return;
+      }
+      setLoading(true);
+      try {
+          const userId = getUserId();
+          await dispatch(disable2faThunk({ userId, code })).unwrap();
+          
+          dispatch(addToast({ type: "success", message: "2FA Disabled Successfully" }));
+          setStatus("disabled");
+          setCode("");
+      } catch (err) {
+          dispatch(addToast({ type: "error", message: err?.message || err || "Failed to disable 2FA" }));
+      } finally {
+          setLoading(false);
+      }
+  };
+
   return (
     <div className="settings-container-inner">
         <section className="verification-card">
@@ -106,18 +160,24 @@ export default function TwoFactorAuth() {
                     </div>
                     
                     <div className="action-col">
-                        <h3>Enable 2FA</h3>
+                        <h3>{status === "enabled" ? "Disable 2FA" : "Enable 2FA"}</h3>
                         <div className="input-group">
                             <input 
                                 type="text" 
                                 placeholder="6-digit code" 
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                disabled={loading || status === "enabled"}
+                                disabled={loading}
                             />
-                            <button className="btn-primary" onClick={handleEnable} disabled={loading || status === "enabled"}>
-                                Enable
-                            </button>
+                            {status === "enabled" ? (
+                                <button className="btn-danger" onClick={handleDisable} disabled={loading}>
+                                    {loading ? "Disabling..." : "Disable"}
+                                </button>
+                            ) : (
+                                <button className="btn-primary" onClick={handleEnable} disabled={loading}>
+                                    {loading ? "Enabling..." : "Enable"}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -183,9 +243,8 @@ export default function TwoFactorAuth() {
             }
             .input-group input:focus { border-color: var(--primary, #000); }
             
-            .btn-primary {
+            .btn-primary, .btn-danger {
                 padding: 12px 24px;
-                background: #000; 
                 color: #fff;
                 border: none;
                 border-radius: 30px; 
@@ -193,8 +252,12 @@ export default function TwoFactorAuth() {
                 font-weight: 600;
                 transition: opacity 0.2s;
             }
-            .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+            .btn-primary { background: #000; }
+            .btn-danger { background: #FF3B30; }
+
+            .btn-primary:disabled, .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
             .btn-primary:hover:not(:disabled) { opacity: 0.9; }
+            .btn-danger:hover:not(:disabled) { opacity: 0.9; }
 
             .qr-display img { max-width: 180px; border-radius: 8px; border: 1px solid #eee; display: block; }
         `}</style>

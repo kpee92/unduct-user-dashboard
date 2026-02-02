@@ -78,6 +78,23 @@ export const checkKycStatusThunk = createAsyncThunk("auth/checkKycStatus", async
   }
 });
 
+export const twoFAStatusThunk = createAsyncThunk("auth/twoFAStatus", async (userId, { rejectWithValue }) => {
+  try {
+    return await apiRequest(endpoints.getTwoFaStatus(userId), { method: "POST" });
+  } catch (e) {
+    return rejectWithValue(e.message);
+  }
+});
+
+export const disable2faThunk = createAsyncThunk("auth/disable2FA", async (data, { rejectWithValue }) => {
+  try {
+    // data: { userId, code }
+    return await apiRequest(endpoints.disable2FA(), { method: "POST", body: data });
+  } catch (e) {
+    return rejectWithValue(e.message);
+  }
+});
+
 const authSlice = createSlice({
   name: "auth",
   initialState: {

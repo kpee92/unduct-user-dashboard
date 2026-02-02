@@ -1,9 +1,34 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
 import SumsubVerification from "@/components/SumsubVerification";
 import TwoFactorAuth from "@/components/TwoFactorAuth";
+import { twoFAStatusThunk } from "@/store/slices/authSlice";
+import { getTokenPayload } from "@/lib/api";
 
 export default function SettingsPage() {
+  const dispatch = useDispatch();
+  const [is2FAEnabled, setIs2FAEnabled] = useState(false);
+
+  useEffect(() => {
+    const check2FA = async () => {
+      const payload = getTokenPayload();
+      const userId = payload?.id || payload?.sub;
+      if (userId) {
+        try {
+          const res = await dispatch(twoFAStatusThunk(userId)).unwrap();
+          if (res?.status === 'enabled' || res?.is2FaEnabled === true) {
+            setIs2FAEnabled(true);
+          }
+        } catch (e) {
+          console.error("Failed to check 2FA status", e);
+        }
+      }
+    };
+    check2FA();
+  }, [dispatch]);
+
   return (
     <div className="rl-content">
       <h1 className="rl-page-title">Settings</h1>
@@ -28,7 +53,7 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        <TwoFactorAuth />
+        <TwoFactorAuth isEnabledProp={is2FAEnabled} />
       </div>
 
       <style jsx>{`
