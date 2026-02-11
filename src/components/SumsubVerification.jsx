@@ -16,8 +16,12 @@ export default function SumsubVerification({ onCompleted, initialStatus }) {
   }, [initialStatus]);
 
   const checkStatus = async () => {
-    const res = await dispatch(checkKycStatusThunk()).unwrap();
-    if (res?.kycStatus) setVerificationStatus(res.kycStatus.toUpperCase());
+    try {
+      const res = await dispatch(checkKycStatusThunk()).unwrap();
+      if (res?.kycStatus) setVerificationStatus(res.kycStatus.toUpperCase());
+    } catch (err) {
+      console.error("Check Status Failed", err);
+    }
   };
 
   const fetchToken = async () => {

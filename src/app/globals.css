@@ -53,11 +53,12 @@ a {
 .rl-app {
   display: grid;
   grid-template-columns: 260px 1fr;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
 }
 
 .rl-sidebar {
+  position: sticky;
+  top: 0;
   background: var(--card-bg);
   border-right: 1px solid var(--card-border);
   padding: 24px 16px;
@@ -171,8 +172,8 @@ a {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  height: 100dvh;
-  overflow: auto;
+  /* height: 100dvh;  <-- removed to allow body scroll */
+  /* overflow: auto;  <-- removed */
 }
 
 /* Mobile top bar */

@@ -1,11 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import { checkKycStatusThunk } from "@/store/slices/authSlice";
+import { addToast } from "@/store/slices/uiSlice";
 
 const FIAT_OPTIONS = ["USD", "EUR", "GBP", "INR"];
 const CRYPTO_OPTIONS = ["BTC", "ETH", "SOL", "USDT"];
 
 export default function ExchangeForm() {
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { kycStatus } = useSelector((state) => state.auth);
+
+  useEffect(() => {
+    dispatch(checkKycStatusThunk());
+  }, [dispatch]);
+
   const [fiatAmount, setFiatAmount] = useState(0);
   const [fiat, setFiat] = useState("USD");
   const [crypto, setCrypto] = useState("BTC");
@@ -83,7 +95,26 @@ export default function ExchangeForm() {
             </select>
           </div>
         </div>
-        <button className="rl-btn rl-btn-primary rl-buy">Buy crypto</button>
+
+        <button className="rl-btn rl-btn-primary rl-buy" onClick={() => {
+            const statusSafe = typeof kycStatus === "string" ? kycStatus.toLowerCase() : "";
+            if (statusSafe !== "approved") {
+              dispatch(addToast({
+                type: "error",
+                title: "Authentication Required",
+                description: "Please complete your KYC verification first."
+              }));
+              return;
+            }
+            if (!fiatAmount) return;
+            const params = new URLSearchParams({
+              fiatAmount, 
+              fiatCurrency: fiat, 
+              cryptoAmount: cryptoAmount.toFixed(8), 
+              cryptoCurrency: crypto
+            });
+            router.push(`/checkout?${params.toString()}`);
+        }}>Buy crypto</button>
       </div>
       <p className="rl-rate">
         Exchange Rate: 1 {crypto} ≈ {price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {fiat}

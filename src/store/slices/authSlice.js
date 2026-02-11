@@ -22,6 +22,14 @@ export const forgotPasswordThunk = createAsyncThunk("auth/forgotPassword", async
   }
 });
 
+export const resetPasswordThunk = createAsyncThunk("auth/resetPassword", async (data, { rejectWithValue }) => {
+  try {
+    return await apiRequest(endpoints.forgotPassword2(), { method: "POST", body: data });
+  } catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
 export const loginThunk = createAsyncThunk("auth/login", async (creds, { rejectWithValue }) => {
   try {
     const res = await apiRequest(endpoints.login(), { method: "POST", body: creds });
@@ -133,7 +141,10 @@ const authSlice = createSlice({
           if (action.payload?.kycStatus) {
             state.kycStatus = action.payload.kycStatus;
           }
-      });
+      })
+      .addCase(resetPasswordThunk.pending, (state) => { state.status = "loading"; state.error = null; })
+      .addCase(resetPasswordThunk.fulfilled, (state) => { state.status = "succeeded"; })
+      .addCase(resetPasswordThunk.rejected, (state, action) => { state.status = "failed"; state.error = action.payload; });
   },
 });
 

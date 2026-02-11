@@ -1,48 +1,75 @@
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { paymentService } from "@/lib/paymentService";
 
-export const preAuthorizeThunk = createAsyncThunk("payment/preAuth", async (data, { rejectWithValue }) => {
-  try {
-    return await paymentService.preAuthorize(data);
-  } catch (err) {
-    return rejectWithValue(err.message);
+export const preAuthorizePayment = createAsyncThunk(
+  "payment/preAuthorize",
+  async (paymentData, { rejectWithValue }) => {
+    try { return await paymentService.preAuthorize(paymentData); } 
+    catch (error) { return rejectWithValue(error.message); }
   }
-});
+);
 
-export const captureThunk = createAsyncThunk("payment/capture", async ({ id, data }, { rejectWithValue }) => {
-  try {
-    return await paymentService.capture(id, data);
-  } catch (err) {
-    return rejectWithValue(err.message);
+export const capturePayment = createAsyncThunk(
+  "payment/capture",
+  async ({ paymentId, captureData }, { rejectWithValue }) => {
+    try { return await paymentService.capture(paymentId, captureData); } 
+    catch (error) { return rejectWithValue(error.message); }
   }
-});
+);
 
-export const getHistoryThunk = createAsyncThunk("payment/history", async ({ limit, offset } = {}, { rejectWithValue }) => {
-  try {
-    return await paymentService.getPaymentHistory(limit, offset);
-  } catch (err) {
-    return rejectWithValue(err.message);
+export const initiateTransfer = createAsyncThunk(
+  "payment/transfer",
+  async (transferData, { rejectWithValue }) => {
+    try { return await paymentService.initiateTransfer(transferData); }
+    catch (error) { return rejectWithValue(error.message); }
   }
-});
+);
 
 const paymentSlice = createSlice({
   name: "payment",
-  initialState: {
-    history: [],
-    currentPayment: null,
-    status: "idle",
-    error: null,
+  initialState: { 
+    loading: false, 
+    error: null, 
+    paymentId: null, 
+    paymentStatus: "idle", // 'idle' | 'authorized' | 'capturing' | 'captured'
+    transferStatus: "idle" // 'idle' | 'loading' | 'success' | 'failed'
   },
-  reducers: {},
+  reducers: {
+    resetPaymentState: (state) => {
+      state.loading = false; 
+      state.error = null; 
+      state.paymentId = null; 
+      state.paymentStatus = "idle";
+      state.transferStatus = "idle";
+    },
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(preAuthorizeThunk.fulfilled, (state, action) => {
-        state.currentPayment = action.payload;
+      // Pre-Auth
+      .addCase(preAuthorizePayment.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(preAuthorizePayment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paymentId = action.payload.paymentId || action.payload.id;
+        state.paymentStatus = "authorized";
       })
-      .addCase(getHistoryThunk.fulfilled, (state, action) => {
-        state.history = action.payload;
-      });
+      .addCase(preAuthorizePayment.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+      
+      // Capture
+      .addCase(capturePayment.pending, (state) => { 
+          state.loading = true; 
+          state.paymentStatus = "capturing"; // IMPORTANT: Prevents double calls
+      })
+      .addCase(capturePayment.fulfilled, (state) => { state.loading = false; state.paymentStatus = "captured"; })
+      .addCase(capturePayment.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // Transfer
+      .addCase(initiateTransfer.pending, (state) => { state.loading = true; state.transferStatus = "loading"; })
+      .addCase(initiateTransfer.fulfilled, (state) => { state.loading = false; state.transferStatus = "success"; })
+      .addCase(initiateTransfer.rejected, (state, action) => { state.loading = false; state.transferStatus = "failed"; state.error = action.payload; });
   },
 });
 
+export const { resetPaymentState } = paymentSlice.actions;
+export const selectPaymentState = (state) => state.payment;
 export default paymentSlice.reducer;
