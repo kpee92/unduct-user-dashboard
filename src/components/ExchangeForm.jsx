@@ -15,7 +15,11 @@ export default function ExchangeForm() {
   const { kycStatus } = useSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(checkKycStatusThunk());
+    console.log("ExchangeForm mounted, dispatching checkKycStatusThunk");
+    dispatch(checkKycStatusThunk())
+      .unwrap()
+      .then((res) => console.log("checkKycStatusThunk success:", res))
+      .catch((err) => console.error("checkKycStatusThunk failed:", err));
   }, [dispatch]);
 
   const [fiatAmount, setFiatAmount] = useState(0);
@@ -114,10 +118,11 @@ export default function ExchangeForm() {
               cryptoCurrency: crypto
             });
             router.push(`/checkout?${params.toString()}`);
-        }}>Buy crypto</button>
+        }}>Buy crypto </button>
       </div>
       <p className="rl-rate">
         Exchange Rate: 1 {crypto} ≈ {price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {fiat}
+        <span style={{ fontSize: '10px', opacity: 0.5, marginLeft: '10px' }}>v1.0.4</span>
       </p>
     </section>
   );

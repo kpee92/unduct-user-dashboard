@@ -138,9 +138,19 @@ const authSlice = createSlice({
         state.status = "idle";
       })
       .addCase(checkKycStatusThunk.fulfilled, (state, action) => {
+          console.log("KYC Status payload:", action.payload);
           if (action.payload?.kycStatus) {
             state.kycStatus = action.payload.kycStatus;
+          } else if (action.payload?.status) {
+            state.kycStatus = action.payload.status;
+          } else if (typeof action.payload === 'string') {
+             state.kycStatus = action.payload;
           }
+      })
+      .addCase(checkKycStatusThunk.rejected, (state, action) => {
+          console.error("KYC Check Failed:", action.payload);
+          // If 401, maybe clear auth? For now just log.
+          state.kycStatus = null; 
       })
       .addCase(resetPasswordThunk.pending, (state) => { state.status = "loading"; state.error = null; })
       .addCase(resetPasswordThunk.fulfilled, (state) => { state.status = "succeeded"; })

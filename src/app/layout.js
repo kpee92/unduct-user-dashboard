@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import "../../public/custom-style.css";
+import "./custom-style.css";
 import Providers from "@/store/Providers";
 import AuthCookieSync from "@/components/AuthCookieSync";
 // Root layout keeps only global providers and styles. Shells are applied per route group.

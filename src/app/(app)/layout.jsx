@@ -11,7 +11,9 @@ export default function AppGroupLayout({ children }) {
     try {
       const hasAuthCookie = document.cookie.split("; ").some((c) => c.startsWith("auth=1"));
       const hasLocalToken = typeof window !== "undefined" && !!window.localStorage.getItem("authToken");
-      if (!hasAuthCookie && !hasLocalToken) {
+      
+      // If no token, we can't make API calls. Redirect to signin to refresh.
+      if (!hasLocalToken) {
         const next = typeof window !== "undefined" ? window.location.pathname + window.location.search : "/dashboard";
         router.replace(`/signin?next=${encodeURIComponent(next)}`);
       }

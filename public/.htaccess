@@ -1,0 +1,46 @@
+# Disable Directory Browsing and MultiViews
+Options -Indexes -MultiViews
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. Allow access to _next directory immediately (so it doesn't get rewritten)
+  RewriteRule ^_next/ - [L]
+
+  # 3. Handle file extensions (remove .html)
+  RewriteCond %{THE_REQUEST} /([^.]+)\.html [NC]
+  RewriteRule ^ /%1 [L,R=301,NC]
+
+  # 4. Standard File/Directory Check
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 5. Route everything else to 404.html (since this is a static export with trailingSlash: true)
+  # But for subdirectories like /dashboard/, Apache finds the directory and serves index.html automatically.
+  # This rule is a fallback for true 404s.
+  ErrorDocument 404 /404.html
+</IfModule>
+
+# Handle MIME types (Critical for CSS/JS loading correct types)
+<IfModule mod_mime.c>
+  AddType text/css .css
+  AddType application/javascript .js
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+</IfModule>
+
+# Cache Control
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$">
+    Header set Cache-Control "max-age=31536000, public"
+  </FilesMatch>
+  <FilesMatch "\.(html)$">
+     Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
