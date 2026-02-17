@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import SumsubVerification from "@/components/SumsubVerification";
-import TwoFactorAuth from "@/components/TwoFactorAuth";
+import dynamic from "next/dynamic";
+const SumsubVerification = dynamic(() => import("@/components/SumsubVerification"), { ssr: false });
+const TwoFactorAuth = dynamic(() => import("@/components/TwoFactorAuth"), { ssr: false });
 import { twoFAStatusThunk } from "@/store/slices/authSlice";
 import { getTokenPayload } from "@/lib/api";
 

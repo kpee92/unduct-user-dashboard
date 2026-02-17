@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginThunk } from "@/store/slices/authSlice";
 import { addToast } from "@/store/slices/uiSlice";
@@ -14,16 +14,22 @@ function SignInContent() {
   const authStatus = useSelector((s) => s.auth.status);
   const authError = useSelector((s) => s.auth.error);
 
-  // If token exists, redirect away from sign-in
-  if (typeof window !== "undefined") {
-    const token = window.localStorage.getItem("authToken");
-    const hasAuthCookie = document.cookie.split("; ").some((c) => c.startsWith("auth=1"));
-    if (token && hasAuthCookie) {
-      const next = searchParams.get("next");
-      if (next) router.replace(next);
-      else router.replace("/dashboard");
+  useEffect(() => {
+    // If token exists, redirect away from sign-in
+    if (typeof window !== "undefined") {
+      try {
+        const token = window.localStorage.getItem("authToken");
+        const hasAuthCookie = document.cookie.split("; ").some((c) => c.startsWith("auth=1"));
+        if (token && hasAuthCookie) {
+          const next = searchParams.get("next");
+          if (next) router.replace(next);
+          else router.replace("/dashboard");
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
-  }
+  }, [router, searchParams]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -47,7 +53,7 @@ function SignInContent() {
   }
   return (
     <>
-      <link rel="stylesheet" href="/custom-style.css" />
+
       <div className="auth-wrap">
         <div className="auth-side">
           <div className="auth-brand"><span className="logo">U</span><div className="Tag">Unduct</div></div>

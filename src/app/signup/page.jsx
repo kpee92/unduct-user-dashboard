@@ -30,7 +30,7 @@ function SignUpContent() {
   }
   return (
     <>
-      <link rel="stylesheet" href="/custom-style.css" />
+
       <div className="auth-wrap">
         <div className="auth-side">
           <div className="auth-brand"><span className="logo">U</span><div className="Tag">Unduct</div></div>
