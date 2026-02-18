@@ -150,7 +150,9 @@ export default function TwoFactorAuth({ isEnabledProp }) {
                 <div className="actions-row">
                     <div className="action-col">
                         <h3>{status === "enabled" ? "Get QR Code" : "1. Get QR Code"}</h3>
-                        {status !== "enabled" && (
+                        {status === "enabled" ? (
+                            <p className="step-text">Your account is currently secured with two-factor authentication.</p>
+                        ) : (
                             <p className="step-text">Download an authenticator app (like Google Authenticator) and scan the QR code below.</p>
                         )}
                         {qrCode ? (
@@ -166,8 +168,10 @@ export default function TwoFactorAuth({ isEnabledProp }) {
                     
                     <div className="action-col">
                         <h3>{status === "enabled" ? "Disable 2FA" : "2. Enable 2FA"}</h3>
-                         {status !== "enabled" && (
-                            <p className="step-text">Enter the 6-digit code from your authenticator app to enable 2FA.</p>
+                        {status === "enabled" ? (
+                             <p className="step-text">Enter the 6-digit code from your authenticator app to disable 2FA.</p>
+                        ) : (
+                             <p className="step-text">Enter the 6-digit code from your authenticator app to enable 2FA.</p>
                         )}
                         <div className="input-group">
                             <input 

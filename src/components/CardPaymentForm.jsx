@@ -82,14 +82,7 @@ export default function CardPaymentForm(props) {
       </div>
       
       {/* Visual Card */}
-      <div style={{ marginBottom: "32px", transform: "scale(1.02)" }}>
-        <VisualCreditCard 
-            cardNumber={cardNumber} 
-            holderName={holderName} 
-            expiry={expiry} 
-            cardType={cardType}
-        />
-      </div>
+      {/* Visual Card Removed */}
 
       <form onSubmit={handleSubmit} className="rl-form">
         <div className="rl-form-group" style={{ marginBottom: 24 }}>
