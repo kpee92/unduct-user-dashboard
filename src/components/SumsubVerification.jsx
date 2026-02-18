@@ -47,7 +47,7 @@ export default function SumsubVerification({ onCompleted, initialStatus }) {
   // Render Logic
   if (status === "active_sdk" && accessToken) {
     return (
-      <div style={{ height: 600, width: '100%' }}>
+      <div style={{ minHeight: 600, height: "auto", width: '100%' }}>
         <SumsubWebSdk
             accessToken={accessToken}
             expirationHandler={expirationHandler}
