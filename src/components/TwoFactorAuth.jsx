@@ -145,37 +145,45 @@ export default function TwoFactorAuth({ isEnabledProp }) {
                     </span></span>
                 </div>
 
+                {/* Instructions merged into actions below */}
+
                 <div className="actions-row">
                     <div className="action-col">
-                        <h3>Get QR Code</h3>
+                        <h3>{status === "enabled" ? "Get QR Code" : "1. Get QR Code"}</h3>
+                        {status !== "enabled" && (
+                            <p className="step-text">Download an authenticator app (like Google Authenticator) and scan the QR code below.</p>
+                        )}
                         {qrCode ? (
                             <div className="qr-display">
                                 <img src={qrCode} alt="2FA QR Code" />
                             </div>
                         ) : (
                              <button className="btn-outline" onClick={handleGetQR} disabled={loading || status === "enabled"}>
-                                {loading ? "Loading..." : "Get QR"}
+                                {loading ? "Loading..." : "Get QR Code"}
                              </button>
                         )}
                     </div>
                     
                     <div className="action-col">
-                        <h3>{status === "enabled" ? "Disable 2FA" : "Enable 2FA"}</h3>
+                        <h3>{status === "enabled" ? "Disable 2FA" : "2. Enable 2FA"}</h3>
+                         {status !== "enabled" && (
+                            <p className="step-text">Enter the 6-digit code from your authenticator app to enable 2FA.</p>
+                        )}
                         <div className="input-group">
                             <input 
                                 type="text" 
-                                placeholder="6-digit code" 
+                                placeholder="Enter 6-digit code" 
                                 value={code}
                                 onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                                 disabled={loading}
                             />
                             {status === "enabled" ? (
                                 <button className="btn-danger" onClick={handleDisable} disabled={loading}>
-                                    {loading ? "Disabling..." : "Disable"}
+                                    {loading ? "Disabling..." : "Disable 2FA"}
                                 </button>
                             ) : (
                                 <button className="btn-primary" onClick={handleEnable} disabled={loading}>
-                                    {loading ? "Enabling..." : "Enable"}
+                                    {loading ? "Enabling..." : "Enable 2FA"}
                                 </button>
                             )}
                         </div>
@@ -218,7 +226,8 @@ export default function TwoFactorAuth({ isEnabledProp }) {
 
             .actions-row { display: flex; gap: 40px; flex-wrap: wrap; }
             .action-col { flex: 1; min-width: 250px; }
-            .action-col h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text, #000); }
+            .action-col h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text, #000); }
+            .step-text { font-size: 14px; color: var(--muted, #666); margin: 0 0 16px 0; line-height: 1.5; }
             
             .btn-outline {
                 padding: 10px 24px;

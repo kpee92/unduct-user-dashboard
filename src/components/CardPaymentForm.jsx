@@ -29,10 +29,6 @@ export default function CardPaymentForm(props) {
     if (val.startsWith("4")) setCardType("VISA");
     else if (val.startsWith("5")) setCardType("MASTERCARD");
     
-    // Add spaces for display logic, but state keeps raw or clean? 
-    // Let's keep raw input value but clean for submission
-    // Simply set raw value here, we can format in render if needed, or format as we type.
-    // Let's format as we type for better UX
     let formatted = "";
     for (let i = 0; i < val.length; i++) {
         if (i > 0 && i % 4 === 0) formatted += " ";
@@ -79,78 +75,96 @@ export default function CardPaymentForm(props) {
   }, [paymentStatus, paymentId, dispatch, props.amount, props.currency, props.onSuccess]);
 
   return (
-    <div style={{ color: "#fff" }}>
+    <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h3>Payment Method</h3>
-        <div style={{ fontSize: 12, opacity: 0.7 }}>VISA MC</div>
+        <h3 className="text-gradient" style={{ fontSize: "24px", fontWeight: "bold" }}>Payment Method</h3>
+        <div style={{ fontSize: 12, opacity: 0.7, color: "var(--muted)" }}>SECURE SSL</div>
       </div>
       
       {/* Visual Card */}
-      <VisualCreditCard 
-        cardNumber={cardNumber} 
-        holderName={holderName} 
-        expiry={expiry} 
-        cardType={cardType}
-      />
+      <div style={{ marginBottom: "32px", transform: "scale(1.02)" }}>
+        <VisualCreditCard 
+            cardNumber={cardNumber} 
+            holderName={holderName} 
+            expiry={expiry} 
+            cardType={cardType}
+        />
+      </div>
 
       <form onSubmit={handleSubmit} className="rl-form">
-        <div className="rl-form-group" style={{ marginBottom: 20 }}>
-          <label style={{ display: "block", marginBottom: 8, fontSize: 14, opacity: 0.7 }}>Card Number</label>
-          <input 
-            type="text" 
-            className="rl-input"
-            style={{ width: "100%", background: "#1a1a1a", border: "1px solid #333", padding: "12px", borderRadius: "8px", color: "white" }}
-            placeholder="0000 0000 0000 0000" 
-            value={cardNumber} 
-            onChange={handleCardNumberChange} 
-            maxLength={19}
-          />
-        </div>
-        
-        <div className="rl-form-group" style={{ marginBottom: 20 }}>
-          <label style={{ display: "block", marginBottom: 8, fontSize: 14, opacity: 0.7 }}>Card Holder Name</label>
-          <input 
-            type="text" 
-            className="rl-input"
-            style={{ width: "100%", background: "#1a1a1a", border: "1px solid #333", padding: "12px", borderRadius: "8px", color: "white" }}
-            placeholder="JOHN DOE" 
-            value={holderName} 
-            onChange={(e) => setHolderName(e.target.value.toUpperCase())} 
-          />
-        </div>
-        
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-          <div>
-              <label style={{ display: "block", marginBottom: 8, fontSize: 14, opacity: 0.7 }}>Expiry Date</label>
-              <input 
+        <div className="rl-form-group" style={{ marginBottom: 24 }}>
+          <label className="payment-form-label">Card Number</label>
+          <div className="premium-input-group">
+            <input 
                 type="text" 
-                className="rl-input"
-                style={{ width: "100%", background: "#1a1a1a", border: "1px solid #333", padding: "12px", borderRadius: "8px", color: "white" }}
-                placeholder="MM/YY" 
-                value={expiry} 
-                onChange={handleExpiryChange} 
-                maxLength={5}
-              />
+                className="premium-input"
+                placeholder="0000 0000 0000 0000" 
+                value={cardNumber} 
+                onChange={handleCardNumberChange} 
+                maxLength={19}
+            />
+            <div style={{ paddingRight: "16px", color: "var(--muted)" }}>💳</div>
+          </div>
+        </div>
+        
+        <div className="rl-form-group" style={{ marginBottom: 24 }}>
+          <label className="payment-form-label">Card Holder Name</label>
+          <div className="premium-input-group">
+            <input 
+                type="text" 
+                className="premium-input"
+                placeholder="JOHN DOE" 
+                value={holderName} 
+                onChange={(e) => setHolderName(e.target.value.toUpperCase())} 
+            />
+          </div>
+        </div>
+        
+        <div className="payment-details-row" style={{ marginBottom: 32 }}>
+          <div>
+              <label className="payment-form-label">Expiry Date</label>
+              <div className="premium-input-group">
+                <input 
+                    type="text" 
+                    className="premium-input"
+                    placeholder="MM/YY" 
+                    value={expiry} 
+                    onChange={handleExpiryChange} 
+                    maxLength={5}
+                />
+              </div>
           </div>
           <div>
-              <label style={{ display: "block", marginBottom: 8, fontSize: 14, opacity: 0.7 }}>CVV</label>
-              <input 
-                type="password" 
-                className="rl-input"
-                style={{ width: "100%", background: "#1a1a1a", border: "1px solid #333", padding: "12px", borderRadius: "8px", color: "white" }}
-                placeholder="..." 
-                value={cvv} 
-                onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))} 
-                maxLength={4}
-              />
+              <label className="payment-form-label">CVV</label>
+              <div className="premium-input-group">
+                <input 
+                    type="password" 
+                    className="premium-input"
+                    placeholder="..." 
+                    value={cvv} 
+                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))} 
+                    maxLength={4}
+                />
+                <div style={{ paddingRight: "16px", color: "var(--muted)", fontSize: "12px" }}>?</div>
+              </div>
           </div>
         </div>
 
-        <button type="submit" className="rl-btn rl-btn-primary" disabled={loading} style={{ width: "100%", padding: "16px", fontSize: "16px", fontWeight: "bold", background: "#3b82f6", border: "none", borderRadius: "12px", color: "white", cursor: loading ? "not-allowed" : "pointer" }}>
+        <button 
+            type="submit" 
+            className="rl-btn rl-btn-primary" 
+            disabled={loading} 
+            style={{ 
+                width: "100%", 
+                height: "56px", 
+                fontSize: "18px", 
+                boxShadow: "0 10px 25px -5px rgba(255, 149, 0, 0.4)" 
+            }}
+        >
           {loading ? "Processing..." : `Pay ${props.amount} ${props.currency}`}
         </button>
         
-        {error && <div className="rl-error" style={{ color: "#ef4444", marginTop: 15, textAlign: "center" }}>{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
+        {error && <div className="rl-error" style={{ color: "#ef4444", marginTop: 20, textAlign: "center", padding: "10px", background: "rgba(239,68,68,0.1)", borderRadius: "8px" }}>{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
       </form>
     </div>
   );

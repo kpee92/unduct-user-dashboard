@@ -50,51 +50,54 @@ function CheckoutContent() {
 
   // Split Layout: Order Summary (Left) + Payment Form (Right)
   return (
-    <div className="rl-content" style={{ padding: "20px 40px" }}>
-        {/* Breadcrumb or header */}
-        <div style={{ marginBottom: 30 }}>
-            {/* Logo area provided by sidebar/shell */}
-             <h1 className="rl-page-title">Checkout</h1>
+    <div className="rl-content" style={{ padding: "40px", maxWidth: "1280px", margin: "0 auto" }}>
+        
+        <div style={{ marginBottom: 40, textAlign: "center" }}>
+             <h1 className="rl-page-title" style={{ fontSize: "48px" }}>Secure <span className="text-gradient">Checkout</span></h1>
+             <p style={{ color: "var(--muted)", fontSize: "16px" }}>Complete your purchase to receive your assets.</p>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "60px", maxWidth: "1200px", margin: "0 auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "40px" }}>
             
             {/* Left Column: Order Summary */}
-            <div style={{ paddingTop: "20px" }}>
-                <div style={{ background: "#111", border: "1px solid #333", borderRadius: "16px", padding: "30px", color: "#fff" }}>
-                    <h2 style={{ fontSize: "20px", marginBottom: "30px", borderBottom: "1px solid #333", paddingBottom: "10px" }}>Order Summary</h2>
+            <div style={{ position: "sticky", top: "100px", height: "fit-content" }}>
+                <div className="checkout-summary">
+                    <h2 style={{ fontSize: "20px", marginBottom: "24px", fontWeight: "700", letterSpacing: "0.5px" }}>Order Details</h2>
                     
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", fontSize: "15px" }}>
-                        <span style={{ color: "#aaa" }}>Transaction Type</span>
-                        <span style={{ fontWeight: "bold" }}>{cryptoCurrency} Purchase</span>
+                    <div className="summary-row">
+                        <span style={{ color: "rgba(255,255,255,0.6)" }}>Asset</span>
+                        <span style={{ fontWeight: "600", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#f59e0b" }}></div>
+                            {cryptoCurrency}
+                        </span>
                     </div>
                     
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px", fontSize: "15px" }}>
-                        <span style={{ color: "#aaa" }}>You Pay</span>
-                        <span style={{ fontWeight: "bold" }}>{fiatAmount} {fiatCurrency}</span>
+                    <div className="summary-row">
+                        <span style={{ color: "rgba(255,255,255,0.6)" }}>You Receive</span>
+                        <span style={{ fontWeight: "600", color: "#60a5fa" }}>{cryptoAmount} {cryptoCurrency}</span>
+                    </div>
+
+                    <div className="summary-row">
+                        <span style={{ color: "rgba(255,255,255,0.6)" }}>Rate</span>
+                        <span style={{ fontWeight: "500", fontSize: "14px" }}>1 {cryptoCurrency} ≈ {(Number(fiatAmount)/Number(cryptoAmount)).toFixed(2)} {fiatCurrency}</span>
                     </div>
                     
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "30px", fontSize: "15px" }}>
-                        <span style={{ color: "#aaa" }}>You Receive</span>
-                        <span style={{ color: "#3b82f6", fontWeight: "bold" }}>{cryptoAmount} {cryptoCurrency}</span>
-                    </div>
-                    
-                    <div style={{ borderTop: "1px solid #333", paddingTop: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "16px", fontWeight: "500" }}>Total Due</span>
-                        <span style={{ fontSize: "24px", fontWeight: "bold", color: "#22c55e" }}>{fiatAmount} {fiatCurrency}</span>
+                    <div className="summary-row total">
+                        <span style={{ fontSize: "16px", fontWeight: "500", color: "rgba(255,255,255,0.8)" }}>Total Due</span>
+                        <span style={{ fontSize: "32px", fontWeight: "800", color: "#ffffff" }}>{fiatAmount} <small style={{ fontSize: "16px", fontWeight: "500" }}>{fiatCurrency}</small></span>
                     </div>
                 </div>
 
-                <div style={{ marginTop: "30px", background: "rgba(59, 130, 246, 0.1)", border: "1px solid rgba(59, 130, 246, 0.2)", borderRadius: "12px", padding: "15px", display: "flex", gap: "10px", alignItems: "start" }}>
-                    <div style={{ marginTop: "2px" }}>🔒</div>
-                    <p style={{ margin: 0, fontSize: "13px", color: "#93c5fd", lineHeight: "1.5" }}>
-                        Your payment information is encrypted and secure. We do not store your full card details.
+                <div style={{ marginTop: "24px", padding: "16px", background: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.1)", borderRadius: "16px", display: "flex", gap: "12px" }}>
+                    <div style={{ fontSize: "20px" }}>🛡️</div>
+                    <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)", lineHeight: "1.5" }}>
+                        Payments are processed securely. Your financial data is encrypted and never stored on our servers.
                     </p>
                 </div>
             </div>
 
             {/* Right Column: Payment Form */}
-            <div>
+            <div className="premium-card" style={{ padding: "40px" }}>
                 <CardPaymentForm 
                     amount={fiatAmount} 
                     currency={fiatCurrency} 

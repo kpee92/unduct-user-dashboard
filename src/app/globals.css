@@ -51,21 +51,23 @@ a {
 
 /* App shell */
 .rl-app {
-  display: grid;
-  grid-template-columns: 260px 1fr;
+  display: block;
   min-height: 100dvh;
 }
 
 .rl-sidebar {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
   background: var(--card-bg);
   border-right: 1px solid var(--card-border);
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
+  z-index: 20;
+  overflow-y: auto;
   box-shadow: var(--shadow-1);
 }
 
@@ -172,8 +174,8 @@ a {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  /* height: 100dvh;  <-- removed to allow body scroll */
-  /* overflow: auto;  <-- removed */
+  margin-left: 260px;
+  min-height: 100dvh;
 }
 
 /* Mobile top bar */
@@ -347,7 +349,10 @@ a {
   }
 
   /* offset content for fixed mobile bar */
-  .rl-main { padding-top: 62px; }
+  .rl-main { 
+    margin-left: 0;
+    padding-top: 62px; 
+  }
 }
 
 /* Table Styles for dark theme */
@@ -391,3 +396,148 @@ table td {
   color: #f59e0b;
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
+
+/* Premium Payment UI Enhancements */
+.premium-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0,0,0,0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.premium-card:hover {
+  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Modern Input Fields */
+.premium-input-group {
+  position: relative;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.premium-input-group:focus-within {
+  background: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(255, 149, 0, 0.1);
+}
+
+.premium-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  outline: none;
+}
+
+.premium-select {
+  border: none;
+  background: #ffffff;
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+  margin-right: 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: 1px solid #f0f0f0;
+  transition: all 0.2s;
+}
+
+.premium-select:hover {
+  background: #f3f4f6;
+}
+
+/* Exchange Widget Specifics */
+.exchange-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+  color: var(--primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin: 0 auto;
+  z-index: 2;
+  position: relative;
+}
+
+/* Payment Form Styling */
+.payment-form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.payment-details-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* Checkout Summary */
+.checkout-summary {
+  background: linear-gradient(180deg, #1a1a1a 0%, #000000 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.checkout-summary::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,149,0,0.15) 0%, rgba(0,0,0,0) 70%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  position: relative; /* z-index fix */
+  z-index: 2;
+}
+
+.summary-row.total {
+  border-top: 1px solid rgba(255,255,255,0.2);
+  border-bottom: none;
+  margin-top: 16px;
+  padding-top: 24px;
+}
+
