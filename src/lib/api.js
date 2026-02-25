@@ -1,4 +1,5 @@
-export const BASE_URL = "https://api.unduct.com";
+// export const BASE_URL = "https://api.unduct.com";
+export const BASE_URL ="https://api.alpacross.com";
 
 const AUTH_TOKEN_KEY = "authToken";
 
@@ -81,6 +82,7 @@ export const endpoints = {
   verify2FA: () => "/users/twofa/verify",
   getTwoFaStatus: (userId) => `/users/getTwoFaStatus/${userId}`,
   disable2FA: () => "/users/disableTwoFaSimple",
+  getWallets: () => "/users/wallets",
 };
 
 // Safely decode a JWT payload without verifying signature (client-side display only)

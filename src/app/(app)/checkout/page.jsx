@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import CardPaymentForm from "@/components/CardPaymentForm";
 import TransferConfirmation from "@/components/TransferConfirmation";
-import { selectPaymentState, initiateTransfer, resetPaymentState } from "@/store/slices/paymentSlice";
+import { selectPaymentState, initiateTransfer, capturePayment, resetPaymentState } from "@/store/slices/paymentSlice";
 
 function CheckoutContent() {
   const searchParams = useSearchParams();
@@ -17,7 +17,7 @@ function CheckoutContent() {
   const cryptoAmount = searchParams.get("cryptoAmount") || "0";
   const cryptoCurrency = searchParams.get("cryptoCurrency") || "BTC";
   
-  const { paymentStatus, transferStatus, error } = useSelector(selectPaymentState);
+  const { paymentStatus, transferStatus, paymentId, error } = useSelector(selectPaymentState);
 
   useEffect(() => {
     dispatch(resetPaymentState());
@@ -30,20 +30,20 @@ function CheckoutContent() {
     }
   }, [transferStatus, router]);
 
-  // If captured, show confirmation
-  if (paymentStatus === "captured" || transferStatus === "loading" || transferStatus === "success") {
+  // If authorized, show confirmation (manual capture step)
+  if (paymentStatus === "authorized" || paymentStatus === "capturing" || paymentStatus === "captured" || transferStatus === "loading" || transferStatus === "success") {
       return (
-          <div className="rl-content" style={{ padding: "40px" }}>
-             <h1 className="rl-page-title">Confirmation</h1>
+          <div className="rl-content fade-in" style={{ padding: "40px" }}>
+             <h1 className="rl-page-title" style={{ textAlign: "center", marginBottom: "32px" }}>Finalize <span>Payment</span></h1>
              <div style={{ maxWidth: 600, margin: "0 auto" }}>
                 <TransferConfirmation 
                     cryptoAmount={cryptoAmount}
                     cryptoCurrency={cryptoCurrency}
-                    onConfirm={() => dispatch(initiateTransfer({ amount: cryptoAmount, currency: cryptoCurrency }))}
-                    loading={transferStatus === "loading"}
+                    onConfirm={() => dispatch(capturePayment({ paymentId, captureData: { amount: fiatAmount, currency: fiatCurrency } }))}
+                    loading={paymentStatus === "capturing" || transferStatus === "loading"}
                 />
              </div>
-             {error && <p style={{ color: "red", textAlign: "center", marginTop: 20 }}>Transfer Error: {error}</p>}
+             {error && <p style={{ color: "#ef4444", textAlign: "center", marginTop: 20, padding: "12px", background: "rgba(239,68,68,0.05)", borderRadius: "12px" }}>Error: {error}</p>}
           </div>
       );
   }
