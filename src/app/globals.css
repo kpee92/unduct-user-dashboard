@@ -397,6 +397,18 @@ table td {
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
 
+.status-danger, .status-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
 /* Premium Payment UI Enhancements */
 .premium-card {
   background: #ffffff;

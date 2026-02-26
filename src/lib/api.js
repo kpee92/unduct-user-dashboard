@@ -56,6 +56,8 @@ export async function apiRequest(path, options = {}) {
   const text = await res.text();
   let data;
   try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+
+
   if (!res.ok) {
     const message = (data && (data.message || data.error)) || `Request failed: ${res.status}`;
     throw new Error(message);
@@ -83,6 +85,13 @@ export const endpoints = {
   getTwoFaStatus: (userId) => `/users/getTwoFaStatus/${userId}`,
   disable2FA: () => "/users/disableTwoFaSimple",
   getWallets: () => "/users/wallets",
+  // Orders
+  orderHistory: (status = "", limit = 50, offset = 0) => {
+    let url = `/payments/history?limit=${limit}&offset=${offset}`;
+    if (status) url += `&status=${status}`;
+    return url;
+  },
+  cancelOrder: (paymentId) => `/payments/request-cancel/${paymentId}`,
 };
 
 // Safely decode a JWT payload without verifying signature (client-side display only)
@@ -124,6 +133,23 @@ export function getTokenPayload() {
   } catch {
     return null;
   }
+}
+
+export const canCancel = (status) => {
+    const s = status?.toLowerCase() || "";
+    // Document says: pending, authorized, success (if refund is supported)
+    return ["pending", "authorized", "success", "successful"].includes(s);
+  };
+
+// Orders API Helpers
+export async function getOrderHistory(status = "", limit = 50, offset = 0) {
+  // Documentation shows POST, usually needs at least an empty object for headers to apply correctly
+  return apiRequest(endpoints.orderHistory(status, limit, offset), { method: "POST", body: {} });
+}
+
+export async function cancelOrderRequest(paymentId) {
+  // Ensure empty body for POST request consistency
+  return apiRequest(endpoints.cancelOrder(paymentId), { method: "POST", body: {} });
 }
 
 
