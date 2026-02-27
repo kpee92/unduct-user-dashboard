@@ -73,7 +73,7 @@ export default function WalletsPage() {
   return (
     <div className="rl-content">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 30 }}>
-        <h1 className="rl-page-title" style={{ margin: 0 }}>Your <span>wallets</span></h1>
+        <h1 className="rl-page-title" style={{ margin: 0 }}>Add your <span>External Wallet</span></h1>
         <button 
           className="rl-btn rl-btn-primary" 
           onClick={() => setIsModalOpen(true)}
@@ -139,7 +139,7 @@ export default function WalletsPage() {
                 <div className="modal-icon">
                   <FaWallet />
                 </div>
-                <h3>Connect Wallet</h3>
+                <h3>Add your External Wallet</h3>
               </div>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><FaTimes /></button>
             </div>

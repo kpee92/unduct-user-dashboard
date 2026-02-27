@@ -13,6 +13,11 @@ const isSuccessToastable = (type) => {
     const lower = type.toLowerCase();
     // Exclude getters/fetchers/checkers
     if (lower.includes("fetch") || lower.includes("get") || lower.includes("check") || lower.includes("load") || lower.includes("history")) return false;
+    
+    // Specifically exclude payment capture - user wants to see their custom popup instead of a toaster
+    const excludedPaymentActions = ["payment/capture"];
+    if (excludedPaymentActions.some(action => lower.includes(action))) return false;
+
     return true;
 };
 

@@ -21,13 +21,13 @@ export default function CardPaymentForm(props) {
   const [cardType, setCardType] = useState("VISA"); 
 
   // Shipping States (Pre-filled with user's provided data)
-  const [shippingName, setShippingName] = useState("Sahil Prince");
-  const [address1, setAddress1] = useState("123 Crypto Street");
-  const [address2, setAddress2] = useState("Near Blockchain Tower");
-  const [city, setCity] = useState("Mumbai");
-  const [state, setState] = useState("Maharashtra");
-  const [pincode, setPincode] = useState("400001");
-  const [country, setCountry] = useState("IN");
+  const [shippingName, setShippingName] = useState("");
+  const [address1, setAddress1] = useState("");
+  const [address2, setAddress2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [country, setCountry] = useState("");
   
   // Crypto States
   const [walletAddress, setWalletAddress] = useState("");
@@ -104,7 +104,7 @@ export default function CardPaymentForm(props) {
     }
 
     const payload = {
-        amount: props.amount, 
+        amount: Number(props.amount), 
         currency: props.currency,
         paymentBrand: cardType,
         shipping_name: shippingName,
@@ -122,7 +122,9 @@ export default function CardPaymentForm(props) {
             cvv 
         },
         walletAddress: walletAddress,
-        network: network
+        network: network,
+        cryptoAmount: Number(props.cryptoAmount),
+        cryptoCurrency: props.cryptoCurrency
     };
     dispatch(preAuthorizePayment(payload));
   };
@@ -188,7 +190,7 @@ export default function CardPaymentForm(props) {
                 <input 
                     type="text" 
                     className="premium-input"
-                    placeholder="JANE JONES" 
+                    placeholder="E.g. JAMES WILSON" 
                     value={holderName} 
                     onChange={(e) => setHolderName(e.target.value.toUpperCase())} 
                 />
@@ -239,7 +241,7 @@ export default function CardPaymentForm(props) {
           <div className="fade-in">
             {/* Wallet Selection Dropdown */}
             <div className="rl-form-group" style={{ marginBottom: 24 }}>
-              <label className="payment-form-label">Destination Wallet</label>
+              <label className="payment-form-label">Select your External Wallet</label>
               <div className="premium-input-group" style={{ background: wallets.length === 0 ? "rgba(0,0,0,0.02)" : "#f9fafb" }}>
                 <select 
                   className="premium-input" 
@@ -277,6 +279,7 @@ export default function CardPaymentForm(props) {
                 <input 
                     type="text" 
                     className="premium-input"
+                    placeholder="E.g. James Wilson"
                     value={shippingName} 
                     onChange={(e) => setShippingName(e.target.value)} 
                 />
@@ -289,6 +292,7 @@ export default function CardPaymentForm(props) {
                 <input 
                     type="text" 
                     className="premium-input"
+                    placeholder="E.g. 10 Downing Street"
                     value={address1} 
                     onChange={(e) => setAddress1(e.target.value)} 
                 />
@@ -302,6 +306,7 @@ export default function CardPaymentForm(props) {
                     <input 
                         type="text" 
                         className="premium-input"
+                        placeholder="E.g. London"
                         value={city} 
                         onChange={(e) => setCity(e.target.value)} 
                     />
@@ -313,6 +318,7 @@ export default function CardPaymentForm(props) {
                     <input 
                         type="text" 
                         className="premium-input"
+                        placeholder="E.g. SW1A 1AA"
                         value={pincode} 
                         onChange={(e) => setPincode(e.target.value)} 
                     />
@@ -327,6 +333,7 @@ export default function CardPaymentForm(props) {
                     <input 
                         type="text" 
                         className="premium-input"
+                        placeholder="E.g. Greater London"
                         value={state} 
                         onChange={(e) => setState(e.target.value)} 
                     />
