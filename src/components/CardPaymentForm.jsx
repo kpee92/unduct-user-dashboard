@@ -385,7 +385,7 @@ export default function CardPaymentForm(props) {
         {error && <div className="rl-error" style={{ color: "#ef4444", marginTop: 20, textAlign: "center", padding: "12px", background: "rgba(239,68,68,0.08)", borderRadius: "12px", fontSize: "14px", fontWeight: "500", border: "1px solid rgba(239,68,68,0.2)" }}>{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
       </form>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .fade-in {
           animation: fadeIn 0.4s ease-out;
         }
@@ -393,7 +393,7 @@ export default function CardPaymentForm(props) {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

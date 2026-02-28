@@ -99,6 +99,27 @@ function CheckoutContent() {
                         <span style={{ fontSize: "16px", fontWeight: "500", color: "rgba(255,255,255,0.8)" }}>Total Due</span>
                         <span style={{ fontSize: "32px", fontWeight: "800", color: "#ffffff" }}>{fiatAmount} <small style={{ fontSize: "16px", fontWeight: "500" }}>{fiatCurrency}</small></span>
                     </div>
+
+                    <div style={{ marginTop: "28px", paddingTop: "24px", borderTop: "1px solid rgba(255,255,255,0.1)", textAlign: "center" }}>
+                        <div style={{ marginBottom: "16px", display: "flex", justifyContent: "center", borderRadius: "12px", overflow: "hidden" }}>
+                            <img 
+                                src="/vecteezy_mastercard-visa-apple-pay-google-pay-popular-payment_.jpg" 
+                                alt="Payment Methods" 
+                                style={{ 
+                                    width: "100%", 
+                                    maxWidth: "350px",
+                                    height: "auto", 
+                                    objectFit: "contain",
+                                    mixBlendMode: "screen",
+                                    filter: "contrast(1.1) brightness(1.1)"
+                                }} 
+                            />
+                        </div>
+                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", lineHeight: "1.6", maxWidth: "300px", margin: "0 auto", textAlign: "center" }}>
+                            Cardholders are responsible for retaining transaction records and complying
+                            with all local laws and regulatory requirements related to virtual currency transactions.
+                        </p>
+                    </div>
                 </div>
 
                 <div style={{ marginTop: "24px", padding: "16px", background: "rgba(59, 130, 246, 0.05)", border: "1px solid rgba(59, 130, 246, 0.1)", borderRadius: "16px", display: "flex", gap: "12px" }}>
