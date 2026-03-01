@@ -3,277 +3,356 @@ import { useState, useEffect } from "react";
 import { apiRequest, endpoints, getTokenPayload } from "@/lib/api";
 import { useDispatch } from "react-redux";
 import { addToast } from "@/store/slices/uiSlice";
-import { twoFAStatusThunk, disable2faThunk } from "@/store/slices/authSlice";
+import { twoFAStatusThunk } from "@/store/slices/authSlice";
 
-export default function TwoFactorAuth({ isEnabledProp }) {
+export default function TwoFactorAuth() {
   const dispatch = useDispatch();
-  const [status, setStatus] = useState("disabled"); // disabled, setup, enabled
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [anyEnabled, setAnyEnabled] = useState(false);
+  
   const [qrCode, setQrCode] = useState(null);
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeSetupMethod, setActiveSetupMethod] = useState(null); // 'totp', 'email', or 'disable_totp', 'disable_email'
 
-  // Sync with prop if provided
-  useEffect(() => {
-    if (isEnabledProp) {
-        setStatus("enabled");
-    }
-  }, [isEnabledProp]);
-
-  // Keep internal check as backup or parallel (optional, but requested to move to page)
-  // We can leave the internal check to handle direct refreshes if the prop isn't ready immediately
-  // But if parent provides it, we prioritize successful enable.
-  
   const getUserId = () => {
-      const payload = getTokenPayload();
-      return payload?.id || payload?.sub; 
+    const payload = getTokenPayload();
+    return payload?.id || payload?.sub;
   };
 
-  useEffect(() => {
+  const fetchStatus = () => {
     const userId = getUserId();
-    console.log("2FA: Checking status for User ID:", userId);
-    
     if (userId) {
       dispatch(twoFAStatusThunk(userId))
         .unwrap()
         .then((res) => {
-           console.log("2FA: Status Response:", res);
-           // Check for various response formats
-           const isEnabled = res?.status === 'enabled' || res?.is2FaEnabled === true;
-           if (isEnabled) {
-               setStatus("enabled");
-           } else if (!isEnabledProp) {
-               // Only reset to disabled if prop is also false
-               // setStatus("disabled"); 
-           }
+          setTotpEnabled(res?.totp?.enabled || false);
+          setEmailEnabled(res?.email?.enabled || false);
+          setAnyEnabled(res?.anyEnabled || false);
         })
         .catch((err) => console.error("2FA Status Check Failed:", err));
     }
-  }, [dispatch, isEnabledProp]);
+  };
 
-  const handleGetQR = async () => {
+  useEffect(() => {
+    fetchStatus();
+  }, [dispatch]);
+
+  const handleSetup = async (method) => {
     setLoading(true);
+    setQrCode(null);
+    setCode("");
     try {
       const userId = getUserId();
-      if (!userId) throw new Error("User not found (Verification failed)");
-      
+      if (!userId) throw new Error("User session expired");
+
       const res = await apiRequest(endpoints.enable2FA(), {
         method: "POST",
-        body: { userId }
+        body: { userId, method }
       });
-      
-      // Log response for debugging
-      console.log("2FA Enable Response:", res);
-      
-      const qrData = res.qrCode || res.qr_code || res.url || res.data;
-      
-      if (qrData) {
+
+      if (method === "totp") {
+        const qrData = res.qrCode || res.qr_code || res.url || res.data;
+        if (qrData) {
           setQrCode(qrData);
-          setStatus("setup");
+          setActiveSetupMethod("totp");
+        } else {
+          dispatch(addToast({ type: "error", title: "QR Error", description: "No QR code received" }));
+        }
       } else {
-         dispatch(addToast({ type: "error", message: "No QR code received from server. Check console." }));
+        setActiveSetupMethod("email");
+        dispatch(addToast({ type: "success", title: "OTP Sent", description: "Verification code sent to your email" }));
       }
     } catch (err) {
-      dispatch(addToast({ type: "error", message: err.message || "Failed to get QR code" }));
+      dispatch(addToast({ type: "error", title: "Setup Failed", description: err.message }));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEnable = async () => {
+  const handleVerify = async () => {
     if (!code || code.length !== 6) {
-        dispatch(addToast({ type: "error", message: "Please enter a valid 6-digit code" }));
-        return;
+      dispatch(addToast({ type: "error", title: "Invalid Code", description: "Please enter a 6-digit code" }));
+      return;
     }
     setLoading(true);
     try {
       const userId = getUserId();
-      await apiRequest(endpoints.verify2FA(), {
-        method: "POST",
-        body: { userId, code }
-      });
+      const isDisabling = activeSetupMethod.startsWith("disable_");
+      const method = activeSetupMethod.replace("disable_", "");
       
-      dispatch(addToast({ type: "success", message: "2FA Enabled Successfully" }));
-      setStatus("enabled");
+      const payload = { userId, method, code };
+      const endpoint = isDisabling ? endpoints.disable2FA() : endpoints.verify2FA();
+
+      console.log(`Calling ${isDisabling ? 'Disable' : 'Verify'} with payload:`, payload);
+
+      await apiRequest(endpoint, {
+        method: "POST",
+        body: payload
+      });
+
+      dispatch(addToast({ 
+        type: "success", 
+        title: isDisabling ? "2FA Disabled" : "2FA Enabled", 
+        description: `${method.toUpperCase()} authentication ${isDisabling ? 'removed' : 'activated'}` 
+      }));
+      
+      setActiveSetupMethod(null);
       setQrCode(null);
       setCode("");
+      fetchStatus();
     } catch (err) {
-      dispatch(addToast({ type: "error", message: err.message || "Failed to enable 2FA" }));
+      dispatch(addToast({ type: "error", title: "Action Failed", description: err.message }));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDisable = async () => {
-      if (!code || code.length !== 6) {
-          dispatch(addToast({ type: "error", message: "Please enter a valid 6-digit code" }));
-          return;
-      }
-      setLoading(true);
-      try {
-          const userId = getUserId();
-          await dispatch(disable2faThunk({ userId, code })).unwrap();
-          
-          dispatch(addToast({ type: "success", message: "2FA Disabled Successfully" }));
-          setStatus("disabled");
-          setCode("");
-      } catch (err) {
-          dispatch(addToast({ type: "error", message: err?.message || err || "Failed to disable 2FA" }));
-      } finally {
-          setLoading(false);
-      }
+  const initiateDisable = async (method) => {
+    setLoading(true);
+    try {
+      const userId = getUserId();
+      // Trigger OTP even for disabling as per request
+      await apiRequest(endpoints.enable2FA(), {
+        method: "POST",
+        body: { userId, method }
+      });
+      
+      setActiveSetupMethod(`disable_${method}`);
+      setCode("");
+      dispatch(addToast({ type: "success", title: "OTP Sent", description: "Verification code sent to your inbox" }));
+    } catch (err) {
+      dispatch(addToast({ type: "error", title: "Action Failed", description: err.message }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="settings-container-inner">
-        <section className="verification-card">
-            <div className="verification-header">
-                <div className="icon-badge">
-                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      <section className="verification-card">
+        <div className="verification-header">
+          <div className="icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2>Two-Factor Authentication (2FA)</h2>
+            <p>Enhance your account security with an extra layer of protection.</p>
+          </div>
+        </div>
+
+        <div className="verification-body">
+          <div className="status-row">
+            Status: <span className={anyEnabled ? "status-enabled" : "status-disabled"}>
+              {anyEnabled ? "Enabled" : "Disabled"}
+            </span>
+          </div>
+
+          {!activeSetupMethod ? (
+            <div className="methods-grid">
+              {/* Authenticator Method */}
+              <div className="method-card">
+                <div className="method-icon-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
                     </svg>
                 </div>
-                <div>
-                     <h2>Two-Factor Authentication (2FA)</h2>
-                     <p>Enhance your account security with an authenticator app.</p>
+                <h3>Authenticator App</h3>
+                <p>Use Google Authenticator or Authy to scan QR codes.</p>
+                {totpEnabled ? (
+                  <button className="btn-secondary" onClick={() => initiateDisable('totp')} disabled={loading}>Disable</button>
+                ) : (
+                  <button className="btn-primary" onClick={() => handleSetup('totp')} disabled={loading}>Setup App</button>
+                )}
+              </div>
+
+              {/* Email Method */}
+              <div className="method-card">
+                <div className="method-icon-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
                 </div>
+                <h3>Email Verification</h3>
+                <p>Receive secure login codes directly in your inbox.</p>
+                {emailEnabled ? (
+                  <button className="btn-secondary" onClick={() => initiateDisable('email')} disabled={loading}>Disable</button>
+                ) : (
+                  <button className="btn-primary" onClick={() => handleSetup('email')} disabled={loading}>Setup Email</button>
+                )}
+              </div>
             </div>
-            
-            <div className="verification-body">
-                <div className="status-row">
-                    <span>Status: <span className={status === "enabled" ? "status-enabled" : "status-disabled"}>
-                        {status === "enabled" ? "Enabled" : "Disabled"}
-                    </span></span>
-                </div>
+          ) : (
+             <div className="setup-container fade-in">
+                <button className="btn-back" onClick={() => setActiveSetupMethod(null)}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                    Back to Selection
+                </button>
 
-                {/* Instructions merged into actions below */}
+                <div className="setup-content">
+                    <h3>{activeSetupMethod.startsWith('disable') ? 'Disable' : 'Secure'} {activeSetupMethod.includes('email') ? 'Email' : 'Authenticator'}</h3>
+                    <p className="setup-desc">
+                        {activeSetupMethod === 'totp' 
+                            ? "Scan the QR code below with your authenticator app, then enter the 6-digit verification code." 
+                            : activeSetupMethod === 'email'
+                            ? "We've sent a 6-digit code to your email. Please enter it below to complete setup."
+                            : `Please enter the 6-digit verification code to disable ${activeSetupMethod.includes('email') ? 'Email' : 'App'} authentication.`}
+                    </p>
 
-                <div className="actions-row">
-                    <div className="action-col">
-                        <h3>{status === "enabled" ? "Get QR Code" : "1. Get QR Code"}</h3>
-                        {status === "enabled" ? (
-                            <p className="step-text">Your account is currently secured with two-factor authentication.</p>
-                        ) : (
-                            <p className="step-text">Download an authenticator app (like Google Authenticator) and scan the QR code below.</p>
-                        )}
-                        {qrCode ? (
-                            <div className="qr-display">
-                                <img src={qrCode} alt="2FA QR Code" />
-                            </div>
-                        ) : (
-                             <button className="btn-outline" onClick={handleGetQR} disabled={loading || status === "enabled"}>
-                                {loading ? "Loading..." : "Get QR Code"}
-                             </button>
-                        )}
-                    </div>
-                    
-                    <div className="action-col">
-                        <h3>{status === "enabled" ? "Disable 2FA" : "2. Enable 2FA"}</h3>
-                        {status === "enabled" ? (
-                             <p className="step-text">Enter the 6-digit code from your authenticator app to disable 2FA.</p>
-                        ) : (
-                             <p className="step-text">Enter the 6-digit code from your authenticator app to enable 2FA.</p>
-                        )}
-                        <div className="input-group">
-                            <input 
-                                type="text" 
-                                placeholder="Enter 6-digit code" 
-                                value={code}
-                                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                                disabled={loading}
-                            />
-                            {status === "enabled" ? (
-                                <button className="btn-danger" onClick={handleDisable} disabled={loading}>
-                                    {loading ? "Disabling..." : "Disable 2FA"}
-                                </button>
-                            ) : (
-                                <button className="btn-primary" onClick={handleEnable} disabled={loading}>
-                                    {loading ? "Enabling..." : "Enable 2FA"}
-                                </button>
-                            )}
+                    {qrCode && activeSetupMethod === 'totp' && (
+                        <div className="qr-container">
+                            <img src={qrCode} alt="2FA QR Code" />
                         </div>
+                    )}
+
+                    <div className="verification-form">
+                        <div className="input-title">Verification Code</div>
+                        <input 
+                            type="text" 
+                            placeholder="000 000" 
+                            className="code-input"
+                            value={code}
+                            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            maxLength={6}
+                        />
+                        <button className="btn-submit" onClick={handleVerify} disabled={loading || code.length !== 6}>
+                            {loading ? "Verifying..." : activeSetupMethod.startsWith('disable') ? "Confirm Disable" : "Enable Method"}
+                        </button>
                     </div>
                 </div>
-            </div>
-        </section>
+             </div>
+          )}
+        </div>
+      </section>
 
-        <style jsx>{`
-            .settings-container-inner { max-width: 800px; margin: 0 auto 24px auto; }
-            .verification-card {
-                background: var(--card-bg, #fff);
-                border: 1px solid var(--card-border, #eee);
-                border-radius: 16px;
-                overflow: hidden;
-                box-shadow: var(--shadow-1, 0 4px 6px rgba(0,0,0,0.05));
-            }
-            .verification-header {
-                padding: 32px;
-                border-bottom: 1px solid var(--card-border, #eee);
-                display: flex;
-                gap: 20px;
-                align-items: flex-start;
-                background: linear-gradient(180deg, var(--bg-soft, #f9f9f9) 0%, rgba(255,255,255,0) 100%);
-            }
-            .icon-badge {
-                width: 48px; height: 48px; border-radius: 12px;
-                background: rgba(255, 149, 0, 0.1); color: var(--primary, #000);
-                display: flex; align-items: center; justify-content: center;
-                flex-shrink: 0;
-            }
-            .verification-header h2 { font-size: 20px; font-weight: 600; color: var(--text, #000); margin: 0 0 8px 0; }
-            .verification-header p { font-size: 14px; color: var(--muted, #666); margin: 0; line-height: 1.5; }
-            
-            .verification-body { padding: 32px; }
-            
-            .status-row { margin-bottom: 24px; font-weight: 500; font-size: 16px; color: var(--text, #000); }
-            .status-disabled { color: #FF3B30; }
-            .status-enabled { color: #34C759; }
+      <style jsx>{`
+        .settings-container-inner { max-width: 800px; margin: 0 auto; padding-bottom: 40px; }
+        
+        .verification-card {
+           background: var(--card-bg, #fff);
+           border: 1px solid var(--card-border, #f0f0f0);
+           border-radius: 16px;
+           box-shadow: var(--shadow-1, 0 1px 3px rgba(0,0,0,0.08));
+           overflow: hidden;
+        }
 
-            .actions-row { display: flex; gap: 40px; flex-wrap: wrap; }
-            .action-col { flex: 1; min-width: 250px; }
-            .action-col h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text, #000); }
-            .step-text { font-size: 14px; color: var(--muted, #666); margin: 0 0 16px 0; line-height: 1.5; }
-            
-            .btn-outline {
-                padding: 10px 24px;
-                border: 1px solid var(--border, #ddd);
-                background: transparent;
-                border-radius: 30px;
-                color: var(--text, #000);
-                cursor: pointer;
-                transition: all 0.2s;
-                font-weight: 500;
-            }
-            .btn-outline:hover:not(:disabled) { border-color: var(--primary, #000); background: var(--bg-hover, #f5f5f5); }
-            
-            .input-group { display: flex; flex-direction: column; gap: 12px; }
-            .input-group input {
-                padding: 12px 14px;
-                border-radius: 8px;
-                border: 1px solid var(--border, #ddd);
-                background: var(--bg-input, #fff);
-                color: var(--text, #000);
-                outline: none;
-            }
-            .input-group input:focus { border-color: var(--primary, #000); }
-            
-            .btn-primary, .btn-danger {
-                padding: 12px 24px;
-                color: #fff;
-                border: none;
-                border-radius: 30px; 
-                cursor: pointer;
-                font-weight: 600;
-                transition: opacity 0.2s;
-            }
-            .btn-primary { background: #000; }
-            .btn-danger { background: #FF3B30; }
+        .verification-header {
+           padding: 32px;
+           display: flex;
+           gap: 20px;
+           align-items: center;
+           border-bottom: 1px solid var(--card-border, #f0f0f0);
+           background: var(--bg-soft, #f5f3f0);
+        }
 
-            .btn-primary:disabled, .btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }
-            .btn-primary:hover:not(:disabled) { opacity: 0.9; }
-            .btn-danger:hover:not(:disabled) { opacity: 0.9; }
+        .icon-badge {
+           width: 44px; height: 44px; border-radius: 10px;
+           background: #fff; color: var(--primary, #ff9500);
+           display: flex; align-items: center; justify-content: center;
+           box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+           flex-shrink: 0;
+        }
 
-            .qr-display img { max-width: 180px; border-radius: 8px; border: 1px solid #eee; display: block; }
-        `}</style>
+        .verification-header h2 { font-size: 20px; font-weight: 700; margin: 0; color: var(--text, #1a1a1a); }
+        .verification-header p { font-size: 14px; color: var(--muted, #666); margin: 2px 0 0 0; }
+
+        .verification-body { padding: 32px; }
+
+        .status-row { margin-bottom: 24px; font-weight: 600; font-size: 15px; color: var(--text, #1a1a1a); }
+        .status-disabled { color: #ff3b30; }
+        .status-enabled { color: #34c759; }
+
+        .methods-grid {
+           display: grid;
+           grid-template-columns: 1fr 1fr;
+           gap: 20px;
+        }
+
+        .method-card {
+           background: #fff;
+           border: 1px solid var(--card-border, #f0f0f0);
+           border-radius: 12px;
+           padding: 24px;
+           text-align: center;
+           transition: all 0.2s ease;
+        }
+
+        .method-card:hover { border-color: var(--primary, #ff9500); transform: translateY(-2px); box-shadow: var(--shadow-2); }
+
+        .method-icon-circle {
+           width: 48px; height: 48px; border-radius: 50%;
+           background: var(--bg-soft, #f5f3f0); color: var(--primary, #ff9500);
+           display: flex; align-items: center; justify-content: center;
+           margin: 0 auto 16px;
+        }
+
+        .method-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--text, #1a1a1a); }
+        .method-card p { font-size: 13px; color: var(--muted, #666); margin-bottom: 20px; line-height: 1.5; }
+
+        .btn-primary {
+           background: var(--primary, #ff9500);
+           color: #fff; border: none; padding: 10px 24px; border-radius: 8px;
+           font-weight: 700; cursor: pointer; transition: all 0.2s;
+           width: 100%; font-size: 14px;
+        }
+        .btn-primary:hover { background: var(--primary-2, #ff8000); box-shadow: 0 4px 12px rgba(255, 149, 0, 0.2); }
+
+        .btn-secondary {
+           background: #fff;
+           color: var(--text, #1a1a1a); border: 1px solid var(--card-border, #f0f0f0); 
+           padding: 10px 24px; border-radius: 8px;
+           font-weight: 700; cursor: pointer; transition: all 0.2s;
+           width: 100%; font-size: 14px;
+        }
+        .btn-secondary:hover { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
+
+        .btn-back {
+           display: flex; align-items: center; gap: 6px; background: none; border: none;
+           color: var(--muted, #666); font-size: 14px; font-weight: 600; cursor: pointer;
+           margin-bottom: 24px; padding: 4px 8px; border-radius: 6px;
+        }
+        .btn-back:hover { background: var(--bg-soft); color: var(--text); }
+
+        .setup-content { max-width: 500px; margin: 0 auto; text-align: center; }
+        .setup-content h3 { font-size: 22px; font-weight: 800; margin-bottom: 12px; color: var(--text); }
+        .setup-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+
+        .qr-container {
+           background: #fff; padding: 16px; border-radius: 12px;
+           border: 1px solid var(--card-border); display: inline-block;
+           margin-bottom: 24px;
+        }
+        .qr-container img { width: 180px; height: 180px; display: block; }
+
+        .verification-form { text-align: left; background: var(--bg-soft); padding: 24px; border-radius:12px; }
+        .input-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.8; }
+        .code-input {
+           width: 100%; height: 50px; border-radius: 8px; border: 1px solid var(--card-border);
+           background: #fff; font-size: 24px; font-weight: 700; text-align: center;
+           letter-spacing: 8px; color: var(--text); outline: none; margin-bottom: 16px;
+           transition: border-color 0.2s;
+        }
+        .code-input:focus { border-color: var(--primary); }
+        .btn-submit {
+           width: 100%; height: 50px; background: var(--primary); color: #fff;
+           border: none; border-radius: 8px; font-weight: 700; font-size: 16px;
+           cursor: pointer; transition: all 0.2s;
+        }
+        .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 149, 0, 0.2); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 600px) {
+           .methods-grid { grid-template-columns: 1fr; }
+        }
+      `}</style>
     </div>
   );
 }
