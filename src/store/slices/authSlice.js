@@ -43,6 +43,27 @@ export const loginThunk = createAsyncThunk("auth/login", async (creds, { rejectW
   }
 });
 
+export const login2FAThunk = createAsyncThunk("auth/login2FA", async (data, { rejectWithValue }) => {
+  try {
+    const res = await apiRequest(endpoints.login2FA(), { method: "POST", body: data });
+    if (res.token) {
+      setAuthToken(res.token);
+      setAuthCookie();
+    }
+    return res;
+  } catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
+export const resendLoginOtpThunk = createAsyncThunk("auth/resendLoginOtp", async (_, { rejectWithValue }) => {
+  try {
+    return await apiRequest(endpoints.sendLoginOtp(), { method: "POST", body: {} });
+  } catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
 export const registerThunk = createAsyncThunk("auth/register", async (data, { rejectWithValue }) => {
   try {
     const res = await apiRequest(endpoints.register(), { method: "POST", body: data });
@@ -132,6 +153,19 @@ const authSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      .addCase(login2FAThunk.pending, (state) => { state.status = "loading"; state.error = null; })
+      .addCase(login2FAThunk.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.token = action.payload.token;
+        state.user = action.payload.user;
+      })
+      .addCase(login2FAThunk.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(resendLoginOtpThunk.pending, (state) => { state.status = "loading"; state.error = null; })
+      .addCase(resendLoginOtpThunk.fulfilled, (state) => { state.status = "succeeded"; })
+      .addCase(resendLoginOtpThunk.rejected, (state, action) => { state.status = "failed"; state.error = action.payload; })
       .addCase(registerThunk.pending, (state) => { state.status = "loading"; state.error = null; })
       .addCase(registerThunk.fulfilled, (state, action) => {
         state.status = "succeeded";

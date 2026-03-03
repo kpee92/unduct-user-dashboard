@@ -27,7 +27,7 @@ export default function CardPaymentForm(props) {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [pincode, setPincode] = useState("");
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState("PL");
   
   // Crypto States
   const [walletAddress, setWalletAddress] = useState("");
@@ -348,6 +348,7 @@ export default function CardPaymentForm(props) {
                         value={country}
                         onChange={(e) => setCountry(e.target.value)}
                     >
+                        <option value="PL">Poland (PL)</option>
                         <option value="IN">India (IN)</option>
                         <option value="US">USA (US)</option>
                         <option value="GB">UK (GB)</option>

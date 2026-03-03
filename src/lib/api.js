@@ -1,5 +1,5 @@
-// export const BASE_URL = "https://api.unduct.com";
-export const BASE_URL ="https://api.alpacross.com";
+export const BASE_URL = "https://api.unduct.com";
+// export const BASE_URL ="https://api.alpacross.com";
 
 const AUTH_TOKEN_KEY = "authToken";
 
@@ -85,6 +85,9 @@ export const endpoints = {
   getTwoFaStatus: (userId) => `/users/getTwoFaStatus/${userId}`,
   disable2FA: () => "/users/disableTwoFaSimple",
   getWallets: () => "/users/wallets",
+  // 2FA login
+  login2FA: () => "/users/2falogin",
+  sendLoginOtp: () => "/users/sendLoginOtp",
   // Orders
   orderHistory: (status = "", limit = 50, offset = 0) => {
     let url = `/payments/history?limit=${limit}&offset=${offset}`;

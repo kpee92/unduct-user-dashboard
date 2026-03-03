@@ -58,7 +58,14 @@ export default function ExchangeForm() {
     //   return;
     // }
     
-    if (!fiatAmount || Number(fiatAmount) <= 0) return;
+    if (!fiatAmount || Number(fiatAmount) <= 0) {
+      dispatch(addToast({
+        type: "error",
+        title: "Invalid Amount",
+        description: "Please enter a valid amount to continue."
+      }));
+      return;
+    }
 
     const params = new URLSearchParams({
       fiatAmount: fiatAmount, 

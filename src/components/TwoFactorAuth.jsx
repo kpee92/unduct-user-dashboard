@@ -56,12 +56,14 @@ export default function TwoFactorAuth() {
         const qrData = res.qrCode || res.qr_code || res.url || res.data;
         if (qrData) {
           setQrCode(qrData);
-          setActiveSetupMethod("totp");
+          // Only switch mode if we're not currently in a disable flow
+          setActiveSetupMethod(prev => prev?.startsWith('disable_') ? prev : "totp");
         } else {
           dispatch(addToast({ type: "error", title: "QR Error", description: "No QR code received" }));
         }
       } else {
-        setActiveSetupMethod("email");
+        // Only switch mode if we're not currently in a disable flow
+        setActiveSetupMethod(prev => prev?.startsWith('disable_') ? prev : "email");
         dispatch(addToast({ type: "success", title: "OTP Sent", description: "Verification code sent to your email" }));
       }
     } catch (err) {
@@ -80,12 +82,17 @@ export default function TwoFactorAuth() {
     try {
       const userId = getUserId();
       const isDisabling = activeSetupMethod.startsWith("disable_");
-      const method = activeSetupMethod.replace("disable_", "");
+      // Extract the method name (email or totp)
+      const internalMethod = activeSetupMethod.replace("disable_", "");
       
-      const payload = { userId, method, code };
+      // Map internal 'totp' to 'authenticator' for the disable API specifically if needed,
+      // though user said 'totp' should go. We'll stick to 'totp' but check endpoint carefully.
+      const methodForApi = internalMethod; 
+      
+      const payload = { userId, method: methodForApi, code };
       const endpoint = isDisabling ? endpoints.disable2FA() : endpoints.verify2FA();
 
-      console.log(`Calling ${isDisabling ? 'Disable' : 'Verify'} with payload:`, payload);
+      console.log(`[2FA] Mode: ${isDisabling ? 'DISABLE' : 'VERIFY'}, Endpoint: ${endpoint}, Method: ${methodForApi}`);
 
       await apiRequest(endpoint, {
         method: "POST",
@@ -95,7 +102,7 @@ export default function TwoFactorAuth() {
       dispatch(addToast({ 
         type: "success", 
         title: isDisabling ? "2FA Disabled" : "2FA Enabled", 
-        description: `${method.toUpperCase()} authentication ${isDisabling ? 'removed' : 'activated'}` 
+        description: `${internalMethod.toUpperCase()} authentication ${isDisabling ? 'removed' : 'activated'}` 
       }));
       
       setActiveSetupMethod(null);
@@ -113,15 +120,19 @@ export default function TwoFactorAuth() {
     setLoading(true);
     try {
       const userId = getUserId();
-      // Trigger OTP even for disabling as per request
-      await apiRequest(endpoints.enable2FA(), {
-        method: "POST",
-        body: { userId, method }
-      });
+      
+      // Only trigger OTP (via enable API) for email method
+      // For TOTP, we don't want to call enable because it generates a new secret/QR
+      if (method === "email") {
+        await apiRequest(endpoints.enable2FA(), {
+          method: "POST",
+          body: { userId, method }
+        });
+        dispatch(addToast({ type: "success", title: "OTP Sent", description: "Verification code sent to your inbox" }));
+      }
       
       setActiveSetupMethod(`disable_${method}`);
       setCode("");
-      dispatch(addToast({ type: "success", title: "OTP Sent", description: "Verification code sent to your inbox" }));
     } catch (err) {
       dispatch(addToast({ type: "error", title: "Action Failed", description: err.message }));
     } finally {
@@ -201,16 +212,28 @@ export default function TwoFactorAuth() {
                             ? "Scan the QR code below with your authenticator app, then enter the 6-digit verification code." 
                             : activeSetupMethod === 'email'
                             ? "We've sent a 6-digit code to your email. Please enter it below to complete setup."
+                            : activeSetupMethod === 'disable_totp'
+                            ? "Enter the 6-digit code from your app to disable. If you've lost access, you can regenerate a new QR code."
                             : `Please enter the 6-digit verification code to disable ${activeSetupMethod.includes('email') ? 'Email' : 'App'} authentication.`}
                     </p>
 
-                    {qrCode && activeSetupMethod === 'totp' && (
+                    {qrCode && (activeSetupMethod === 'totp' || activeSetupMethod === 'disable_totp') && (
                         <div className="qr-container">
                             <img src={qrCode} alt="2FA QR Code" />
                         </div>
                     )}
 
                     <div className="verification-form">
+                        {activeSetupMethod === 'disable_totp' && !qrCode && (
+                            <button 
+                                className="btn-secondary" 
+                                style={{marginBottom: 20, borderColor: 'var(--primary)', color: 'var(--primary)'}}
+                                onClick={() => handleSetup('totp')}
+                            >
+                                Lost access? Regenerate QR Code
+                            </button>
+                        )}
+
                         <div className="input-title">Verification Code</div>
                         <input 
                             type="text" 

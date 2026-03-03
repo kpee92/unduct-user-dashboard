@@ -4,7 +4,9 @@ const ignoredActions = [
   "auth/checkKycStatus",
   "ticker/fetchPrices",
   "payment/history",
-  "auth/twoFAStatus"
+  "auth/twoFAStatus",
+  "auth/resendLoginOtp",
+  "auth/login2FA"
 ];
 
 const isIgnored = (type) => ignoredActions.some((prefix) => type.startsWith(prefix));
