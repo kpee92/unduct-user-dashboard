@@ -62,32 +62,18 @@ function SignUpContent() {
               <input name="firstName" className="auth-input" type="text" placeholder="First name" required />
               <input name="lastName" className="auth-input" type="text" placeholder="Last name" required />
             </div>
-            <div style={{ position: 'relative' }}>
+            <div className="auth-field-wrap" style={{ position: 'relative' }}>
               <input 
                 name="dob" 
-                className="auth-input age-input" 
-                type="text" 
-                placeholder="Age (Minimum 18+)"
-                onFocus={(e) => {
-                   e.target.type = 'date';
-                   if (typeof e.target.showPicker === 'function') e.target.showPicker();
-                }}
-                onClick={(e) => {
-                   e.target.type = 'date';
-                   if (typeof e.target.showPicker === 'function') e.target.showPicker();
-                }}
-                onBlur={(e) => !e.target.value && (e.target.type = 'text')}
+                className="auth-input date-input" 
+                type="date" 
+                onClick={(e) => e.target.showPicker && e.target.showPicker()}
                 onChange={() => setAgeError("")}
                 required 
                 style={{ cursor: 'pointer', borderColor: ageError ? '#ef4444' : '#f0f0f0' }} 
               />
               <div 
-                onClick={(e) => {
-                  const input = e.currentTarget.previousSibling;
-                  input.type = 'date';
-                  if (typeof input.showPicker === 'function') input.showPicker();
-                }}
-                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', display: 'flex', alignItems: 'center', background: 'white', paddingLeft: '8px', cursor: 'pointer' }}
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', display: 'flex', alignItems: 'center', background: 'white', paddingLeft: '8px', pointerEvents: 'none' }}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
               </div>
@@ -95,15 +81,22 @@ function SignUpContent() {
             {ageError && <p style={{ fontSize: '11px', color: '#ef4444', marginTop: '-8px', marginLeft: '4px' }}>{ageError}</p>}
             
             <style jsx>{`
-              .age-input::-webkit-calendar-picker-indicator {
+              .date-input::-webkit-calendar-picker-indicator {
                 opacity: 0;
                 -webkit-appearance: none;
-                width: 100%;
+                width: 40px;
                 height: 100%;
                 position: absolute;
-                left: 0;
+                right: 0;
                 top: 0;
                 cursor: pointer;
+                z-index: 2;
+              }
+              .date-input {
+                appearance: none;
+                -webkit-appearance: none;
+                position: relative;
+                padding-right: 40px !important;
               }
             `}</style>
             <input name="email" className="auth-input" type="email" placeholder="Email" required />

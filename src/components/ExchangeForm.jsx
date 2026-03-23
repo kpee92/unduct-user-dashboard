@@ -49,14 +49,15 @@ export default function ExchangeForm() {
   const handleBuy = () => {
     const statusSafe = typeof kycStatus === "string" ? kycStatus.toLowerCase() : "";
     
-    // if (statusSafe !== "approved") {
-    //   dispatch(addToast({
-    //     type: "error",
-    //     title: "Authentication Required",
-    //     description: "Please complete your KYC verification first."
-    //   }));
-    //   return;
-    // }
+    if (statusSafe !== "approved") {
+      dispatch(addToast({
+        type: "error",
+        title: "Authentication Required",
+        description: "Please complete your KYC verification first."
+      }));
+      router.push("/settings");
+      return;
+    }
     
     if (!fiatAmount || Number(fiatAmount) <= 0) {
       dispatch(addToast({

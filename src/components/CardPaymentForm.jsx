@@ -2,10 +2,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
 import { preAuthorizePayment, selectPaymentState } from "@/store/slices/paymentSlice";
 import { apiRequest, endpoints } from "@/lib/api";
 
 export default function CardPaymentForm(props) {
+  const router = useRouter();
   const dispatch = useDispatch();
   const { loading, error } = useSelector(selectPaymentState);
   
@@ -241,7 +243,17 @@ export default function CardPaymentForm(props) {
           <div className="fade-in">
             {/* Wallet Selection Dropdown */}
             <div className="rl-form-group" style={{ marginBottom: 24 }}>
-              <label className="payment-form-label">Select your External Wallet</label>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                <label className="payment-form-label" style={{ marginBottom: 0 }}>Select your External Wallet</label>
+                {wallets.length === 0 && !fetchingWallets && (
+                  <span 
+                    onClick={() => router.push("/wallets")} 
+                    style={{ color: "#2563eb", fontSize: "12px", cursor: "pointer", fontWeight: "600" }}
+                  >
+                    Click to add external wallet
+                  </span>
+                )}
+              </div>
               <div className="premium-input-group" style={{ background: wallets.length === 0 ? "rgba(0,0,0,0.02)" : "#f9fafb" }}>
                 <select 
                   className="premium-input" 
@@ -313,12 +325,12 @@ export default function CardPaymentForm(props) {
                   </div>
                 </div>
                 <div>
-                  <label className="payment-form-label">Pincode</label>
+                  <label className="payment-form-label">Zipcode</label>
                   <div className="premium-input-group">
                     <input 
                         type="text" 
                         className="premium-input"
-                        placeholder="E.g. SW1A 1AA"
+                        placeholder="E.g 999077"
                         value={pincode} 
                         onChange={(e) => setPincode(e.target.value)} 
                     />
