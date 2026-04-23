@@ -60,8 +60,11 @@ function SignInContent() {
 
         if (methods.length === 1) {
           const method = methods[0];
-          setSelectedMethod(method);
-          if (method === "email") {
+          // Map variations to standardized methods for internal state
+          const mappedMethod = ["totp", "google", "app"].includes(method) ? "totp" : method;
+          setSelectedMethod(mappedMethod);
+          
+          if (mappedMethod === "email") {
              // Immediately trigger email OTP
              dispatch(resendLoginOtpThunk()).unwrap().then(() => {
                 dispatch(addToast({ type: "success", title: "OTP Sent", description: "Verification code sent to your email" }));
@@ -143,7 +146,7 @@ function SignInContent() {
             <div className="auth-title">Security Check</div>
             <p className="auth-sub">Choose a method to verify your identity.</p>
             <div className="methods-list">
-               {twoFaInfo.methods.includes("totp") && (
+               {(twoFaInfo.methods.includes("totp") || twoFaInfo.methods.includes("google") || twoFaInfo.methods.includes("app")) && (
                  <div className="method-item" onClick={() => handleSelectMethod("totp")}>
                     <div className="m-icon">🔐</div>
                     <div className="m-text">
@@ -163,6 +166,19 @@ function SignInContent() {
                     <div className="m-arrow">→</div>
                  </div>
                )}
+               {/* Add generic fallback for unknown methods to avoid empty screen */}
+               {twoFaInfo.methods.length > 0 && 
+                !twoFaInfo.methods.some(m => ["totp", "google", "app", "email"].includes(m)) && (
+                  <div className="method-item" onClick={() => handleSelectMethod(twoFaInfo.methods[0])}>
+                    <div className="m-icon">🛡️</div>
+                    <div className="m-text">
+                        <strong>Default Verification</strong>
+                        <span>Security code required to continue</span>
+                    </div>
+                    <div className="m-arrow">→</div>
+                  </div>
+                )
+               }
             </div>
             <button className="back-link" onClick={goBack}>← Back to login</button>
           </div>

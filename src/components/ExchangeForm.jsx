@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useRouter } from "next/navigation";
 import { checkKycStatusThunk } from "@/store/slices/authSlice";
+import { fetchPricesThunk } from "@/store/slices/tickerSlice";
 import { addToast } from "@/store/slices/uiSlice";
 
 const FIAT_OPTIONS = ["USD", "EUR", "GBP", "INR"];
@@ -13,33 +14,47 @@ export default function ExchangeForm() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { kycStatus } = useSelector((state) => state.auth);
+  const { prices, status: tickerStatus } = useSelector((state) => state.ticker);
 
   useEffect(() => {
     dispatch(checkKycStatusThunk());
+    dispatch(fetchPricesThunk());
+    
+    // Refresh prices every 30 seconds
+    const interval = setInterval(() => {
+      dispatch(fetchPricesThunk());
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, [dispatch]);
 
   const [fiatAmount, setFiatAmount] = useState(""); // empty string initially for cleaner input
   const [fiat, setFiat] = useState("USD");
   const [crypto, setCrypto] = useState("BTC");
 
-  // Fake prices for demo
+  // Use real prices from CoinGecko via Redux, with hardcoded fallbacks
   const price = useMemo(() => {
+    // Try to get dynamic price from store first
+    const dynamicPrice = prices?.[crypto]?.[fiat];
+    if (dynamicPrice) return dynamicPrice;
+
+    // Fallback/Initial hardcoded prices if API is loading or failed
     const base = {
       BTC: 111124.8,
       ETH: 3450.25,
       SOL: 175.4,
-      USDT: 1,
-    }[crypto];
+      USDT: 1.0,
+    }[crypto] || 0;
 
     const fx = {
-      USD: 1,
+      USD: 1.0,
       EUR: 0.92,
       GBP: 0.79,
-      INR: 83,
-    }[fiat];
+      INR: 83.0,
+    }[fiat] || 1.0;
 
     return base * fx;
-  }, [crypto, fiat]);
+  }, [crypto, fiat, prices]);
 
   const cryptoAmount = useMemo(() => {
     const amt = Number(fiatAmount) || 0;
@@ -91,12 +106,16 @@ export default function ExchangeForm() {
           <label className="payment-form-label">You Pay</label>
           <div className="premium-input-group">
             <input
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               className="premium-input"
               value={fiatAmount}
-              onChange={(e) => setFiatAmount(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                  setFiatAmount(val);
+                }
+              }}
               placeholder="0.00"
             />
             <div style={{ paddingRight: "4px" }}>
@@ -128,10 +147,11 @@ export default function ExchangeForm() {
           <label className="payment-form-label">You Receive</label>
           <div className="premium-input-group" style={{ background: "#f3f4f6", border: "1px solid transparent" }}>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               className="premium-input"
               value={cryptoAmount > 0 ? cryptoAmount.toFixed(8) : "0.00"}
-              readOnly
+              disabled
               style={{ color: "#374151" }}
             />
             <div style={{ paddingRight: "4px" }}>

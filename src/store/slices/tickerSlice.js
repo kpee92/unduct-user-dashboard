@@ -20,11 +20,18 @@ const tickerSlice = createSlice({
   },
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(fetchPricesThunk.fulfilled, (state, action) => {
-      state.prices = action.payload;
-      state.lastUpdated = Date.now();
-      state.status = "succeeded";
-    });
+    builder
+      .addCase(fetchPricesThunk.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchPricesThunk.fulfilled, (state, action) => {
+        state.prices = action.payload;
+        state.lastUpdated = Date.now();
+        state.status = "succeeded";
+      })
+      .addCase(fetchPricesThunk.rejected, (state) => {
+        state.status = "failed";
+      });
   },
 });
 

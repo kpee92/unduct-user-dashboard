@@ -2,13 +2,22 @@
 export const cryptoApi = {
   async fetchPrices() {
     try {
-      // Free CoinGecko API
-      const url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,tether&vs_currencies=usd,eur,gbp,inr";
+      // Free CoinGecko API - User mentioned this pattern works in other projects
+      const ids = "bitcoin,ethereum,solana,tether";
+      const currencies = "usd,eur,gbp,inr";
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=${currencies}`;
+      
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Price fetch failed");
+      if (!res.ok) {
+        throw new Error(`CoinGecko fetch failed: ${res.status}`);
+      }
       const data = await res.json();
       
-      // Map to standard format
+      // If API return empty/error, return null
+      if (!data || Object.keys(data).length === 0) return null;
+
+      // Map to standardized format used in the application
+      // BTC, ETH, SOL, USDT symbols and USD, EUR, GBP, INR currency keys
       return {
         BTC: { USD: data.bitcoin?.usd, EUR: data.bitcoin?.eur, GBP: data.bitcoin?.gbp, INR: data.bitcoin?.inr },
         ETH: { USD: data.ethereum?.usd, EUR: data.ethereum?.eur, GBP: data.ethereum?.gbp, INR: data.ethereum?.inr },
@@ -16,7 +25,7 @@ export const cryptoApi = {
         USDT: { USD: data.tether?.usd, EUR: data.tether?.eur, GBP: data.tether?.gbp, INR: data.tether?.inr }
       };
     } catch (e) {
-      console.error(e);
+      console.error("Crypto API Exception:", e.message);
       return null;
     }
   }
