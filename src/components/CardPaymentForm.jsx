@@ -133,6 +133,25 @@ export default function CardPaymentForm(props) {
 
   return (
     <div className="payment-container">
+      <div style={{
+          background: "rgba(0,0,0,0.03)",
+          border: "1px solid rgba(0,0,0,0.08)",
+          borderRadius: "12px",
+          padding: "12px 16px",
+          marginBottom: "16px",
+          fontSize: "12px",
+          lineHeight: "1.5"
+        }}>
+          <strong style={{ fontSize: "13px" }}>SDK GROUP SP. Z O. O.</strong><br />
+          <span>License: VASP</span><br />
+          <span>License No: 2401-CKRDST.4225.1091.2024</span><br />
+          <span>Descriptor: Unduct.com</span><br />
+          <span>
+            Support: <a href="mailto:support@unduct.com" style={{ color: "#2563eb" }}>
+              support@unduct.com
+            </a>
+          </span>
+      </div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
         <div>
           <h3 className="text-gradient" style={{ fontSize: "28px", fontWeight: "800", letterSpacing: "-0.5px" }}>Checkout</h3>
